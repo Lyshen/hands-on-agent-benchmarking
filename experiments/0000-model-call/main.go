@@ -15,9 +15,22 @@ type Config struct {
 	Model  string `json:"model"`
 }
 
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 type OpenAIRequestBody struct {
-	Model    string              `json:"model"`
-	Messages []map[string]string `json:"messages"`
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+}
+
+type Choice struct {
+	Message Message `json:"message"`
+}
+
+type OpenAIResponseBody struct {
+	Choices []Choice `json:"choices"`
 }
 
 func main() {
@@ -38,11 +51,11 @@ func main() {
 	fmt.Println(conf.URL)
 	fmt.Println(conf.Model)
 
-	message := map[string]string{
-		"role":    "user",
-		"content": "Hello",
+	message := Message{
+		Role:    "user",
+		Content: "Hello",
 	}
-	messages := []map[string]string{message}
+	messages := []Message{message}
 	requestBody := OpenAIRequestBody{
 		Model:    conf.Model,
 		Messages: messages,
@@ -86,4 +99,12 @@ func main() {
 	respStr := string(respBytes)
 	fmt.Println(resp.Status)
 	fmt.Println(respStr)
+
+	var respChoice OpenAIResponseBody
+	err = json.Unmarshal(respBytes, &respChoice)
+	if err != nil {
+		fmt.Println("response parse error")
+		return 
+	}
+	fmt.Println(respChoice.Choices[0].Message.Content)
 }
