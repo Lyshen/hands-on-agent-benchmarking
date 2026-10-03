@@ -1,0 +1,5 @@
+{
+   "url" : "https://example.com/v1/chat/completions",
+   "apikey" : "your-api-key",
+   "model" : "your-model"
+}
