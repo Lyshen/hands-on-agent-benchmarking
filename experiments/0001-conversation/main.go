@@ -72,9 +72,8 @@ func buildRequest(conf Config, messages []Message) (*http.Request, error) {
 	return req, nil
 }
 
-func sendRequest(req http.Request) ([]byte, error) {
-	client := &http.Client{}
-	resp, err := client.Do(&req)
+func sendRequest(client *http.Client, req *http.Request) ([]byte, error) {
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +99,7 @@ func parseResponse(respBytes []byte) (Message, error) {
 	}
 
 	if len(chatResp.Choices) == 0 {
-		return Message{}, errors.New("no found in response choices")
+		return Message{}, errors.New("no message found in response choices")
 	}
 
 	return chatResp.Choices[0].Message, nil
@@ -112,9 +111,10 @@ func main() {
 		fmt.Println("fail to load config ", err)
 		return
 	}
+	client := http.Client{}
 
 	messages := []Message{
-		Message{
+		{
 			Role:    "system",
 			Content: "You are Bobby. Chat with user.",
 		},
@@ -122,10 +122,10 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Print("You:")
+		fmt.Print("You: ")
 
 		var userMsg string
-		userMsg, err := reader.ReadString(byte('\n'))
+		userMsg, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("fail to get user message: ", err)
 			continue
@@ -141,22 +141,25 @@ func main() {
 		req, err := buildRequest(conf, messages)
 		if err != nil {
 			fmt.Println("fail to build request: ", err)
+			messages = messages[:len(messages)-1]
 			continue
 		}
 
-		respBytes, err := sendRequest(*req)
+		respBytes, err := sendRequest(&client, req)
 		if err != nil {
 			fmt.Println("fail to send request: ", err)
+			messages = messages[:len(messages)-1]
 			continue
 		}
 
 		assistantMsg, err := parseResponse(respBytes)
 		if err != nil {
 			fmt.Println("fail to parse response: ", err)
+			messages = messages[:len(messages)-1]
 			continue
 		}
 
-		fmt.Println("Assistant:", assistantMsg.Content)
+		fmt.Println("Assistant: ", assistantMsg.Content)
 		messages = append(messages, assistantMsg)
 	}
 }
