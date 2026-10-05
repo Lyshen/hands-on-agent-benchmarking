@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"os/exec"
 )
 
 type Config struct {
@@ -92,6 +93,33 @@ type ChatResponse struct {
 	Choices []Choice `json:"choices"`
 }
 
+func initTools() *[]Tool {
+	tools := []Tool{
+		{
+			Type: "function",
+			Function: Function{
+				Name:        "shell",
+				Description: "Run an allowed read-only command in the journal workspace.",
+				Parameters: Parameters{
+					Type: "object",
+					Properties: Properties{
+						Command: Command{
+							Type:        "string",
+							Description: "The command to run.",
+						},
+					},
+					Required: []string{
+						"command",
+					},
+					AdditionalProperties: false,
+				},
+			},
+		},
+	}
+
+	return &tools
+}
+
 func buildRequest(conf Config, messages []Message, tools []Tool) (*http.Request, error) {
 	chatReq := ChatRequest{
 		Model:    conf.Model,
@@ -153,36 +181,37 @@ func parseResponse(respBytes []byte) (*Message, error) {
 }
 
 func triggeredByMessages(client *http.Client, conf Config, messages []Message, tools []Tool) (*Message, error) {
-
 	req, err := buildRequest(conf, messages, tools)
 	if err != nil {
-		messages = messages[:len(messages)-1]
 		return nil, err
 	}
 
 	respBytes, err := sendRequest(client, req)
 	if err != nil {
-		messages = messages[:len(messages)-1]
 		return nil, err
 	}
 
 	fmt.Println(string(respBytes))
 
-	assistantMsg, err := parseResponse(respBytes)
+	respMsg, err := parseResponse(respBytes)
 	if err != nil {
-		messages = messages[:len(messages)-1]
 		return nil, err
 	}
 
-	return assistantMsg, nil
-
+	return respMsg, nil
 }
 
 func execute(toolCall ToolCall) Message {
-	message := Message{
-		Role:       "tool",
-		ToolCallID: toolCall.Id,
-		Content:    "OK",
+	var message Message
+
+	if toolCall.Function.Name == "shell" {
+                
+	} else {
+		message = Message{
+			Role:       "tool",
+			ToolCallID: toolCall.Id,
+			Content:    "ToolCall Error: toolcall name is not found.",
+		}
 	}
 
 	return message
@@ -194,37 +223,15 @@ func main() {
 		fmt.Println("fail to load config: ", err)
 		return
 	}
-	fmt.Println(conf.URL)
+
 	messages := []Message{
 		{
 			Role:    "system",
 			Content: "You are Mary. You are a lovely girl.",
 		},
 	}
-	fmt.Println(messages[0].Content)
-	tools := []Tool{
-		{
-			Type: "function",
-			Function: Function{
-				Name:        "shell",
-				Description: "Run an allowed read-only command in the journal workspace.",
-				Parameters: Parameters{
-					Type: "object",
-					Properties: Properties{
-						Command: Command{
-							Type:        "string",
-							Description: "The command to run.",
-						},
-					},
-					Required: []string{
-						"command",
-					},
-					AdditionalProperties: false,
-				},
-			},
-		},
-	}
-	fmt.Println(tools[0].Type)
+
+	tools := initTools()
 	reader := bufio.NewReader(os.Stdin)
 	client := &http.Client{}
 	for {
@@ -241,28 +248,26 @@ func main() {
 
 		messages = append(messages, Message{Role: "user", Content: userMsg})
 
-		assistantMsg, err := triggeredByMessages(client, conf, messages, tools)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-
-		messages = append(messages, *assistantMsg)
-		if len(assistantMsg.ToolCalls) != 0 {
-			fmt.Println("Assistant (ToolCall): ", assistantMsg.ToolCalls[0])
-			resultMsg := execute(assistantMsg.ToolCalls[0])
-			messages = append(messages, resultMsg)
-
-			assistantMsg, err = triggeredByMessages(client, conf, messages, tools)
+		for {
+			respMsg, err := triggeredByMessages(client, conf, messages, *tools)
 			if err != nil {
 				fmt.Println(err)
-				continue
+				break
 			}
-			fmt.Println("Assistant: ", assistantMsg.Content)
-			messages = append(messages, *assistantMsg)
 
-		} else {
-			fmt.Println("Assistant: ", assistantMsg.Content)
+			messages = append(messages, *respMsg)
+
+			for _, toolCall := range respMsg.ToolCalls {
+				fmt.Println("ToolCall: ", toolCall)
+				resultMsg := execute(toolCall)
+				fmt.Println("ToolCallResult: ", resultMsg)
+				messages = append(messages, resultMsg)
+			}
+
+			if len(respMsg.ToolCalls) == 0 {
+				fmt.Println("Assistant: ", respMsg.Content)
+				break
+			}
 		}
 	}
 }
