@@ -34,6 +34,10 @@ func loadConfig(filename string) (Config, error) {
 	return conf, nil
 }
 
+type ShellCommand struct {
+	Command string `json:"command"`
+}
+
 type ToolCallSchema struct {
 	Arguments string `json:"arguments"`
 	Name      string `json:"name"`
@@ -205,7 +209,47 @@ func execute(toolCall ToolCall) Message {
 	var message Message
 
 	if toolCall.Function.Name == "shell" {
-                
+        var shellCommand ShellCommand
+		err := json.Unmarshal([]byte(toolCall.Function.Arguments), &shellCommand)
+		if err != nil {
+		    message = Message{
+			    Role:       "tool",
+			    ToolCallID: toolCall.Id,
+			    Content:    "Invaild arguments. error in parsing. Please check",
+            }
+			return message
+		}
+
+        fields := strings.Fields(shellCommand.Command) 
+        if len(fields) >= 1 {
+            name := fields[0]
+			args := fields[1:]
+
+			if name == "ls" {
+                cmd := exec.Command(name, args ...) 
+
+				output, err := cmd.Output()
+                if err != nil {
+		            message = Message{
+			            Role:       "tool",
+			            ToolCallID: toolCall.Id,
+			            Content:    "Command err " + err.Error(),
+		            }
+                    return message                 
+				}
+		        message = Message{
+			        Role:       "tool",
+			        ToolCallID: toolCall.Id,
+			        Content:    string(output),
+		        }
+			} else {
+		        message = Message{
+			        Role:       "tool",
+			        ToolCallID: toolCall.Id,
+			        Content:    "Command is not in approval list. Only ls is allowed.",
+		        }
+			}
+		}
 	} else {
 		message = Message{
 			Role:       "tool",
