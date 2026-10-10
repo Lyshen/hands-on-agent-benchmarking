@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 )
@@ -18,8 +17,10 @@ func main() {
 	contexter := Contexter{}
 	contexter.Init()
 
+	client := LLMClient{}
+	client.Init(&conf)
+
 	reader := bufio.NewReader(os.Stdin)
-	client := &http.Client{}
 	for {
 		contexter.Output()
 		fmt.Println("____________________")
@@ -35,7 +36,7 @@ func main() {
 		contexter.Add(Message{Role: "user", Content: userMsg})
 
 		for {
-			respMsg, err := triggeredByMessages(client, conf, contexter.Messages, contexter.Tools)
+			respMsg, err := client.triggeredByMessages(contexter)
 			if err != nil {
 				fmt.Println(err)
 				break

@@ -8,11 +8,21 @@ import (
 	"net/http"
 )
 
-func buildRequest(conf Config, messages []Message, tools []Tool) (*http.Request, error) {
+type LLMClient struct {
+	Conf *Config
+    Client *http.Client
+}
+
+func (client *LLMClient) Init(conf *Config) {
+	client.Conf = conf
+	client.Client = &http.Client{}
+}
+
+func (client LLMClient) buildRequest(contexter Contexter) (*http.Request, error) {
 	chatReq := ChatRequest{
-		Model:    conf.Model,
-		Messages: messages,
-		Tools:    tools,
+		Model:    client.Conf.Model,
+		Messages: contexter.Messages,
+		Tools:    contexter.Tools,
 	}
 
 	var reqBytes []byte
@@ -23,19 +33,19 @@ func buildRequest(conf Config, messages []Message, tools []Tool) (*http.Request,
 
 	body := bytes.NewReader(reqBytes)
 
-	req, err := http.NewRequest("POST", conf.URL, body)
+	req, err := http.NewRequest("POST", client.Conf.URL, body)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+conf.APIKey)
+	req.Header.Set("Authorization", "Bearer "+client.Conf.APIKey)
 
 	return req, nil
 }
 
-func sendRequest(client *http.Client, req *http.Request) ([]byte, error) {
-	resp, err := client.Do(req)
+func (client LLMClient) send(req *http.Request) ([]byte, error) {
+	resp, err := client.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -68,13 +78,13 @@ func parseResponse(respBytes []byte) (*Message, error) {
 	return &resp.Choices[0].Message, nil
 }
 
-func triggeredByMessages(client *http.Client, conf Config, messages []Message, tools []Tool) (*Message, error) {
-	req, err := buildRequest(conf, messages, tools)
+func (client LLMClient) triggeredByMessages(contexter Contexter) (*Message, error) {
+	req, err := client.buildRequest(contexter)
 	if err != nil {
 		return nil, err
 	}
 
-	respBytes, err := sendRequest(client, req)
+	respBytes, err := client.send(req)
 	if err != nil {
 		return nil, err
 	}
