@@ -8,26 +8,6 @@ import (
 	"net/http"
 )
 
-type Message struct {
-	Role       string     `json:"role"`
-	Content    string     `json:"content,omitempty"`
-	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string     `json:"tool_call_id,omitempty"`
-}
-
-type ChatRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Tools    []Tool    `json:"tools"`
-}
-
-type Choice struct {
-	Message Message `json:"message"`
-}
-
-type ChatResponse struct {
-	Choices []Choice `json:"choices"`
-}
 
 func buildRequest(conf Config, messages []Message, tools []Tool) (*http.Request, error) {
 	chatReq := ChatRequest{
