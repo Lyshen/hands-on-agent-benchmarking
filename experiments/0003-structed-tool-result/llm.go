@@ -8,7 +8,6 @@ import (
 	"net/http"
 )
 
-
 func buildRequest(conf Config, messages []Message, tools []Tool) (*http.Request, error) {
 	chatReq := ChatRequest{
 		Model:    conf.Model,
@@ -87,4 +86,3 @@ func triggeredByMessages(client *http.Client, conf Config, messages []Message, t
 
 	return respMsg, nil
 }
-

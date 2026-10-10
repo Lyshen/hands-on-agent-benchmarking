@@ -15,18 +15,13 @@ func main() {
 		return
 	}
 
-	messages := []Message{
-		{
-			Role:    "system",
-			Content: "You are Mary. You are a lovely girl.",
-		},
-	}
+	contexter := Contexter{}
+	contexter.Init()
 
-	tools := initTools()
 	reader := bufio.NewReader(os.Stdin)
 	client := &http.Client{}
 	for {
-		fmt.Println(messages)
+		contexter.Output()
 		fmt.Println("____________________")
 		fmt.Print("You: ")
 
@@ -37,22 +32,22 @@ func main() {
 		}
 		userMsg = strings.Trim(userMsg, "\n")
 
-		messages = append(messages, Message{Role: "user", Content: userMsg})
+		contexter.Add(Message{Role: "user", Content: userMsg})
 
 		for {
-			respMsg, err := triggeredByMessages(client, conf, messages, *tools)
+			respMsg, err := triggeredByMessages(client, conf, contexter.Messages, contexter.Tools)
 			if err != nil {
 				fmt.Println(err)
 				break
 			}
 
-			messages = append(messages, *respMsg)
+			contexter.Add(*respMsg)
 
 			for _, toolCall := range respMsg.ToolCalls {
 				fmt.Println("ToolCall: ", toolCall)
 				resultMsg := execute(toolCall)
 				fmt.Println("ToolCallResult: ", resultMsg)
-				messages = append(messages, resultMsg)
+				contexter.Add(resultMsg)
 			}
 
 			if len(respMsg.ToolCalls) == 0 {

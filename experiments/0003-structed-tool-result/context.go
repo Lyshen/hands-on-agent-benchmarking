@@ -1,8 +1,23 @@
 package main
 
+import (
+	"fmt"
+)
 
-func initTools() *[]Tool {
-	tools := []Tool{
+type Contexter struct {
+	Messages []Message
+	Tools    []Tool
+}
+
+func (c *Contexter) Init() {
+	c.Messages = []Message{
+		{
+			Role:    "system",
+			Content: "You are Mary. You are a lovely girl.",
+		},
+	}
+
+	c.Tools = []Tool{
 		{
 			Type: "function",
 			Function: Function{
@@ -25,6 +40,13 @@ func initTools() *[]Tool {
 		},
 	}
 
-	return &tools
+}
+
+func (c *Contexter) Add(message Message) {
+	c.Messages = append(c.Messages, message)
+}
+
+func (c *Contexter) Output() {
+	fmt.Println(c.Messages)
 }
 
