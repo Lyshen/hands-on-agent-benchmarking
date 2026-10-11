@@ -36,7 +36,7 @@ func main() {
 		contexter.Add(Message{Role: "user", Content: userMsg})
 
 		for {
-			respMsg, err := client.triggeredByMessages(contexter)
+			respMsg, err := client.triggeredBy(contexter)
 			if err != nil {
 				fmt.Println(err)
 				break

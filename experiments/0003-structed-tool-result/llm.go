@@ -78,7 +78,7 @@ func parseResponse(respBytes []byte) (*Message, error) {
 	return &resp.Choices[0].Message, nil
 }
 
-func (client LLMClient) triggeredByMessages(contexter Contexter) (*Message, error) {
+func (client LLMClient) triggeredBy(contexter Contexter) (*Message, error) {
 	req, err := client.buildRequest(contexter)
 	if err != nil {
 		return nil, err
