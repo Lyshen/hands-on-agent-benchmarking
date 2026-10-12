@@ -5,11 +5,14 @@ import (
 )
 
 type Contexter struct {
+	Model string
 	Messages []Message
 	Tools    []Tool
 }
 
-func (c *Contexter) Init() {
+func (c *Contexter) Init(model string) {
+	c.Model = model
+
 	c.Messages = []Message{
 		{
 			Role:    "system",

@@ -15,7 +15,7 @@ func main() {
 	}
 
 	contexter := Contexter{}
-	contexter.Init()
+	contexter.Init(conf.Model)
 
 	client := LLMClient{}
 	client.Init(&conf)

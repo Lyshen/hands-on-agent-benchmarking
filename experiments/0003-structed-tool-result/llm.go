@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -11,49 +10,34 @@ import (
 type LLMClient struct {
 	Conf *Config
     Client *http.Client
+	Adapter *Adapter
 }
 
 func (client *LLMClient) Init(conf *Config) {
 	client.Conf = conf
 	client.Client = &http.Client{}
+	client.Adapter = &Adapter{}
 }
 
-func (client LLMClient) buildRequest(contexter Contexter) (*http.Request, error) {
-	chatReq := ChatRequest{
-		Model:    client.Conf.Model,
-		Messages: contexter.Messages,
-		Tools:    contexter.Tools,
-	}
-
-	var reqBytes []byte
-	reqBytes, err := json.Marshal(chatReq)
-	if err != nil {
-		return nil, err
-	}
-
-	body := bytes.NewReader(reqBytes)
-
-	req, err := http.NewRequest("POST", client.Conf.URL, body)
-	if err != nil {
-		return nil, err
+func (client LLMClient) send(reqBytes []byte) ([]byte, error) {
+    body := bytes.NewReader(reqBytes)
+    req, err := http.NewRequest("POST", client.Conf.URL, body)
+    if err != nil {
+        return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+client.Conf.APIKey)
+	req.Header.Set("authorization", "Bearer " + client.Conf.APIKey)
 
-	return req, nil
-}
-
-func (client LLMClient) send(req *http.Request) ([]byte, error) {
-	resp, err := client.Client.Do(req)
+    resp, err := client.Client.Do(req)
 	if err != nil {
-		return nil, err
+        return nil, err
 	}
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, errors.New("fail to get response " + resp.Status)
+    if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+        return nil, errors.New("fail to get response " + resp.Status) 
 	}
 
 	respBytes, err := io.ReadAll(resp.Body)
@@ -64,22 +48,8 @@ func (client LLMClient) send(req *http.Request) ([]byte, error) {
 	return respBytes, nil
 }
 
-func parseResponse(respBytes []byte) (*Message, error) {
-	var resp ChatResponse
-	err := json.Unmarshal(respBytes, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(resp.Choices) == 0 {
-		return nil, errors.New("no message found in response choices")
-	}
-
-	return &resp.Choices[0].Message, nil
-}
-
 func (client LLMClient) triggeredBy(contexter Contexter) (*Message, error) {
-	req, err := client.buildRequest(contexter)
+	req, err := client.Adapter.convert(contexter)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +59,7 @@ func (client LLMClient) triggeredBy(contexter Contexter) (*Message, error) {
 		return nil, err
 	}
 
-	respMsg, err := parseResponse(respBytes)
+	respMsg, err := client.Adapter.unconvert(respBytes)
 	if err != nil {
 		return nil, err
 	}
