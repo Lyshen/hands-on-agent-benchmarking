@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-func execute(toolCall ToolCall) Message {
+func execute(toolInvocation ToolInvocation) Message {
 	var message Message
 
-	if toolCall.Function.Name == "shell" {
+	if toolInvocation.Name == "shell" {
 		var shellCommand ShellCommand
-		err := json.Unmarshal([]byte(toolCall.Function.Arguments), &shellCommand)
+		err := json.Unmarshal([]byte(toolInvocation.Arguments), &shellCommand)
 		if err != nil {
 			message = Message{
 				Role:       "tool",
-				ToolCallID: toolCall.Id,
+				ToolCallID: toolInvocation.Id,
 				Content:    "Invalid arguments. Error in parsing. Please check",
 			}
 			return message
@@ -36,13 +36,13 @@ func execute(toolCall ToolCall) Message {
 					if errors.As(err, &exitErr) {
 						message = Message{
 							Role:       "tool",
-							ToolCallID: toolCall.Id,
+							ToolCallID: toolInvocation.Id,
 							Content:    "Command err " + string(exitErr.Stderr),
 						}
 					} else {
 						message = Message{
 							Role:       "tool",
-							ToolCallID: toolCall.Id,
+							ToolCallID: toolInvocation.Id,
 							Content:    "Command err " + err.Error(),
 						}
 					}
@@ -50,20 +50,20 @@ func execute(toolCall ToolCall) Message {
 				}
 				message = Message{
 					Role:       "tool",
-					ToolCallID: toolCall.Id,
+					ToolCallID: toolInvocation.Id,
 					Content:    string(output),
 				}
 			} else {
 				message = Message{
 					Role:       "tool",
-					ToolCallID: toolCall.Id,
+					ToolCallID: toolInvocation.Id,
 					Content:    "Command is not in approval list. Only ls is allowed.",
 				}
 			}
 		} else {
 			message = Message{
 				Role:       "tool",
-				ToolCallID: toolCall.Id,
+				ToolCallID: toolInvocation.Id,
 				Content:    "ToolCall command is empty. Please Check.",
 			}
 
@@ -71,7 +71,7 @@ func execute(toolCall ToolCall) Message {
 	} else {
 		message = Message{
 			Role:       "tool",
-			ToolCallID: toolCall.Id,
+			ToolCallID: toolInvocation.Id,
 			Content:    "ToolCall Error: toolcall name is not found.",
 		}
 	}

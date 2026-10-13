@@ -59,7 +59,9 @@ func main() {
 
 			for _, toolCall := range respMsg.ToolCalls {
 				fmt.Println("ToolCall: ", toolCall)
-				resultMsg := execute(toolCall)
+
+				toolInvocation := adapter.buildToolInvocation(toolCall)
+				resultMsg := execute(toolInvocation)
 				fmt.Println("ToolCallResult: ", resultMsg)
 				contexter.Add(resultMsg)
 			}

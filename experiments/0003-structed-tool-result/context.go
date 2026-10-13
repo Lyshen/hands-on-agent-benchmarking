@@ -20,7 +20,14 @@ func (c *Contexter) Init(model string) {
 		},
 	}
 
-	c.Tools = []Tool{
+	c.Tools = []Tool {
+       {
+          Name : "shell",
+		  Description: "Run an allowed read-only command in the journal workspace.",
+	   },
+	}
+     /*
+	[]Tool{
 		{
 			Type: "function",
 			Function: Function{
@@ -41,7 +48,7 @@ func (c *Contexter) Init(model string) {
 				},
 			},
 		},
-	}
+	}*/
 
 }
 

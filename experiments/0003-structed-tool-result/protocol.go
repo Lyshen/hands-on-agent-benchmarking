@@ -3,14 +3,14 @@ package main
 type Message struct {
 	Role       string     `json:"role"`
 	Content    string     `json:"content,omitempty"`
-	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCalls  []OpenAIToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
 
 type ChatRequest struct {
 	Model    string    `json:"model"`
 	Messages []Message `json:"messages"`
-	Tools    []Tool    `json:"tools"`
+	Tools    []OpenAITool    `json:"tools"`
 }
 
 type Choice struct {
@@ -27,13 +27,13 @@ type ShellCommand struct {
 	Command string `json:"command"`
 }
 
-type ToolCallSchema struct {
+type OpenAIToolCallSchema struct {
 	Arguments string `json:"arguments"`
 	Name      string `json:"name"`
 }
 
-type ToolCall struct {
-	Function ToolCallSchema `json:"function"`
+type OpenAIToolCall struct {
+	Function OpenAIToolCallSchema `json:"function"`
 	Id       string         `json:"id"`
 	Type     string         `json:"type"`
 }
@@ -60,7 +60,7 @@ type Function struct {
 	Parameters  Parameters `json:"parameters"`
 }
 
-type Tool struct {
+type OpenAITool struct {
 	Type     string   `json:"type"`
 	Function Function `json:"function"`
 }
