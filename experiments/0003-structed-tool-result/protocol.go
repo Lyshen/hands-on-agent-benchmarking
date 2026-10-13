@@ -1,6 +1,5 @@
 package main
 
-
 type Message struct {
 	Role       string     `json:"role"`
 	Content    string     `json:"content,omitempty"`
@@ -65,4 +64,3 @@ type Tool struct {
 	Type     string   `json:"type"`
 	Function Function `json:"function"`
 }
-

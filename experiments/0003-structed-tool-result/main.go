@@ -17,14 +17,15 @@ func main() {
 	contexter := Contexter{}
 	contexter.Init(conf.Model)
 
+	adapter := OpenAIAdapter{}
+
 	client := LLMClient{}
 	client.Init(&conf)
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		contexter.Output()
-		fmt.Println("____________________")
-		fmt.Print("You: ")
+		//contexter.Output()
+		fmt.Print("\n\nYou: ")
 
 		userMsg, err := reader.ReadString('\n')
 		if err != nil {
@@ -36,13 +37,25 @@ func main() {
 		contexter.Add(Message{Role: "user", Content: userMsg})
 
 		for {
-			respMsg, err := client.triggeredBy(contexter)
+			req, err := adapter.buildRequest(contexter)
 			if err != nil {
 				fmt.Println(err)
 				break
 			}
 
-			contexter.Add(*respMsg)
+			respBytes, err := client.send(req)
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			respMsg, err := adapter.parseResponse(respBytes)
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			contexter.Add(respMsg)
 
 			for _, toolCall := range respMsg.ToolCalls {
 				fmt.Println("ToolCall: ", toolCall)

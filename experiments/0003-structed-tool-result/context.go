@@ -5,7 +5,7 @@ import (
 )
 
 type Contexter struct {
-	Model string
+	Model    string
 	Messages []Message
 	Tools    []Tool
 }
@@ -52,4 +52,3 @@ func (c *Contexter) Add(message Message) {
 func (c *Contexter) Output() {
 	fmt.Println(c.Messages)
 }
-

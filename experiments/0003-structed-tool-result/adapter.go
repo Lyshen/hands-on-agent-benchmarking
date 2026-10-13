@@ -1,7 +1,7 @@
 package main
 
 import (
-    "encoding/json"
+	"encoding/json"
 	"errors"
 )
 
@@ -24,16 +24,17 @@ func (adapter OpenAIAdapter) buildRequest(contexter Contexter) ([]byte, error) {
 	return reqBytes, nil
 }
 
-func (adapter OpenAIAdapter) parseResponse(respBytes []byte) (*Message, error) {
+func (adapter OpenAIAdapter) parseResponse(respBytes []byte) (Message, error) {
 	var resp ChatResponse
+	msg := Message{}
 	err := json.Unmarshal(respBytes, &resp)
 	if err != nil {
-		return nil, err
+		return msg, err
 	}
 
 	if len(resp.Choices) == 0 {
-		return nil, errors.New("no message found in response choices")
+		return msg, errors.New("no message found in response choices")
 	}
 
-	return &resp.Choices[0].Message, nil
+	return resp.Choices[0].Message, nil
 }
