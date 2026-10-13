@@ -58,12 +58,12 @@ func main() {
 			contexter.Add(respMsg)
 
 			for _, toolCall := range respMsg.ToolCalls {
-				fmt.Println("ToolCall: ", toolCall)
-
 				toolInvocation := adapter.buildToolInvocation(toolCall)
-				resultMsg := execute(toolInvocation)
-				fmt.Println("ToolCallResult: ", resultMsg)
-				contexter.Add(resultMsg)
+				toolResult := execute(toolInvocation)
+				//fmt.Println("\nToolCall: ", toolCall)
+				//fmt.Println("ToolCallResult: ", resultMsg)
+
+				contexter.Add(adapter.parseToolResult(toolResult))
 			}
 
 			if len(respMsg.ToolCalls) == 0 {

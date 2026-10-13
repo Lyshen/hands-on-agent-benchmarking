@@ -1,16 +1,17 @@
 package main
 
 type Tool struct {
-    Name string
+	Name        string
 	Description string
 }
 
 type ToolInvocation struct {
-    Id string
-    Name string
+	Id        string
+	Name      string
 	Arguments string
 }
 
 type ToolResult struct {
-
+	Id      string
+	Content string
 }

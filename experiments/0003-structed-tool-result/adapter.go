@@ -78,3 +78,12 @@ func (adapter OpenAIAdapter) buildToolInvocation(toolCall OpenAIToolCall) ToolIn
 
 	return toolInvocation
 }
+
+func (adapter OpenAIAdapter) parseToolResult(toolResult ToolResult) Message {
+	message := Message{
+		Role:       "tool",
+		Content:    toolResult.Content,
+		ToolCallID: toolResult.Id,
+	}
+	return message
+}

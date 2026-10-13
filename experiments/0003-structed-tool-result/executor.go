@@ -7,19 +7,18 @@ import (
 	"strings"
 )
 
-func execute(toolInvocation ToolInvocation) Message {
-	var message Message
+func execute(toolInvocation ToolInvocation) ToolResult {
+	result := ToolResult{
+		Id:      toolInvocation.Id,
+		Content: "",
+	}
 
 	if toolInvocation.Name == "shell" {
 		var shellCommand ShellCommand
 		err := json.Unmarshal([]byte(toolInvocation.Arguments), &shellCommand)
 		if err != nil {
-			message = Message{
-				Role:       "tool",
-				ToolCallID: toolInvocation.Id,
-				Content:    "Invalid arguments. Error in parsing. Please check",
-			}
-			return message
+			result.Content = "Invalid arguments. Error in parsing. Please check"
+			return result
 		}
 
 		fields := strings.Fields(shellCommand.Command)
@@ -34,47 +33,22 @@ func execute(toolInvocation ToolInvocation) Message {
 				if err != nil {
 					var exitErr *exec.ExitError
 					if errors.As(err, &exitErr) {
-						message = Message{
-							Role:       "tool",
-							ToolCallID: toolInvocation.Id,
-							Content:    "Command err " + string(exitErr.Stderr),
-						}
+						result.Content = "Command err " + string(exitErr.Stderr)
 					} else {
-						message = Message{
-							Role:       "tool",
-							ToolCallID: toolInvocation.Id,
-							Content:    "Command err " + err.Error(),
-						}
+						result.Content = "Command err " + err.Error()
 					}
-					return message
-				}
-				message = Message{
-					Role:       "tool",
-					ToolCallID: toolInvocation.Id,
-					Content:    string(output),
+				} else {
+					result.Content = string(output)
 				}
 			} else {
-				message = Message{
-					Role:       "tool",
-					ToolCallID: toolInvocation.Id,
-					Content:    "Command is not in approval list. Only ls is allowed.",
-				}
+				result.Content = "Command is not in approval list. Only ls is allowed."
 			}
 		} else {
-			message = Message{
-				Role:       "tool",
-				ToolCallID: toolInvocation.Id,
-				Content:    "ToolCall command is empty. Please Check.",
-			}
-
+			result.Content = "ToolCall command is empty. Please Check."
 		}
 	} else {
-		message = Message{
-			Role:       "tool",
-			ToolCallID: toolInvocation.Id,
-			Content:    "ToolCall Error: toolcall name is not found.",
-		}
+		result.Content = "ToolCall Error: toolcall name is not found."
 	}
 
-	return message
+	return result
 }
