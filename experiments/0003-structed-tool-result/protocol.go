@@ -1,16 +1,16 @@
 package main
 
 type Message struct {
-	Role       string     `json:"role"`
-	Content    string     `json:"content,omitempty"`
+	Role       string           `json:"role"`
+	Content    string           `json:"content,omitempty"`
 	ToolCalls  []OpenAIToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string     `json:"tool_call_id,omitempty"`
+	ToolCallID string           `json:"tool_call_id,omitempty"`
 }
 
 type ChatRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Tools    []OpenAITool    `json:"tools"`
+	Model    string       `json:"model"`
+	Messages []Message    `json:"messages"`
+	Tools    []OpenAITool `json:"tools"`
 }
 
 type Choice struct {
@@ -34,8 +34,8 @@ type OpenAIToolCallSchema struct {
 
 type OpenAIToolCall struct {
 	Function OpenAIToolCallSchema `json:"function"`
-	Id       string         `json:"id"`
-	Type     string         `json:"type"`
+	Id       string               `json:"id"`
+	Type     string               `json:"type"`
 }
 
 type Command struct {

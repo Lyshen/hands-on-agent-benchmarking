@@ -20,36 +20,12 @@ func (c *Contexter) Init(model string) {
 		},
 	}
 
-	c.Tools = []Tool {
-       {
-          Name : "shell",
-		  Description: "Run an allowed read-only command in the journal workspace.",
-	   },
-	}
-     /*
-	[]Tool{
+	c.Tools = []Tool{
 		{
-			Type: "function",
-			Function: Function{
-				Name:        "shell",
-				Description: "Run an allowed read-only command in the journal workspace.",
-				Parameters: Parameters{
-					Type: "object",
-					Properties: Properties{
-						Command: Command{
-							Type:        "string",
-							Description: "The command to run.",
-						},
-					},
-					Required: []string{
-						"command",
-					},
-					AdditionalProperties: false,
-				},
-			},
+			Name:        "shell",
+			Description: "Run an allowed read-only command in the journal workspace.",
 		},
-	}*/
-
+	}
 }
 
 func (c *Contexter) Add(message Message) {
