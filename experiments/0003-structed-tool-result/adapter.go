@@ -5,10 +5,10 @@ import (
 	"errors"
 )
 
-type Adapter struct {
+type OpenAIAdapter struct {
 }
 
-func (a Adapter) convert(contexter Contexter) ([]byte, error) {
+func (adapter OpenAIAdapter) buildRequest(contexter Contexter) ([]byte, error) {
 	chatReq := ChatRequest{
 		Model:    contexter.Model,
 		Messages: contexter.Messages,
@@ -24,7 +24,7 @@ func (a Adapter) convert(contexter Contexter) ([]byte, error) {
 	return reqBytes, nil
 }
 
-func (a Adapter) unconvert(respBytes []byte) (*Message, error) {
+func (adapter OpenAIAdapter) parseResponse(respBytes []byte) (*Message, error) {
 	var resp ChatResponse
 	err := json.Unmarshal(respBytes, &resp)
 	if err != nil {

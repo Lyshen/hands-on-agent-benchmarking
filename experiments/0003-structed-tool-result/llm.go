@@ -10,13 +10,13 @@ import (
 type LLMClient struct {
 	Conf *Config
     Client *http.Client
-	Adapter *Adapter
+	Adapter *OpenAIAdapter
 }
 
 func (client *LLMClient) Init(conf *Config) {
 	client.Conf = conf
 	client.Client = &http.Client{}
-	client.Adapter = &Adapter{}
+	client.Adapter = &OpenAIAdapter{}
 }
 
 func (client LLMClient) send(reqBytes []byte) ([]byte, error) {
@@ -49,7 +49,7 @@ func (client LLMClient) send(reqBytes []byte) ([]byte, error) {
 }
 
 func (client LLMClient) triggeredBy(contexter Contexter) (*Message, error) {
-	req, err := client.Adapter.convert(contexter)
+	req, err := client.Adapter.buildRequest(contexter)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (client LLMClient) triggeredBy(contexter Contexter) (*Message, error) {
 		return nil, err
 	}
 
-	respMsg, err := client.Adapter.unconvert(respBytes)
+	respMsg, err := client.Adapter.parseResponse(respBytes)
 	if err != nil {
 		return nil, err
 	}
