@@ -6,12 +6,13 @@ type Tool struct {
 }
 
 type ToolInvocation struct {
-	Id        string
+	ID        string
 	Name      string
 	Arguments string
 }
 
 type ToolResult struct {
-	Id      string
-	Content string
+	InvocationID string
+	Output       string
+	Error        error
 }

@@ -9,45 +9,42 @@ import (
 
 func execute(toolInvocation ToolInvocation) ToolResult {
 	result := ToolResult{
-		Id:      toolInvocation.Id,
-		Content: "",
+		InvocationID: toolInvocation.ID,
+		Output:       "",
+		Error:        nil,
 	}
 
 	if toolInvocation.Name == "shell" {
 		var shellCommand ShellCommand
 		err := json.Unmarshal([]byte(toolInvocation.Arguments), &shellCommand)
-		if err != nil {
-			result.Content = "Invalid arguments. Error in parsing. Please check"
-			return result
-		}
 
-		fields := strings.Fields(shellCommand.Command)
-		if len(fields) >= 1 {
-			name := fields[0]
-			args := fields[1:]
+		if err == nil {
+			fields := strings.Fields(shellCommand.Command)
 
-			if name == "ls" {
-				cmd := exec.Command(name, args...)
+			if len(fields) >= 1 {
+				name := fields[0]
+				args := fields[1:]
 
-				output, err := cmd.Output()
-				if err != nil {
-					var exitErr *exec.ExitError
-					if errors.As(err, &exitErr) {
-						result.Content = "Command err " + string(exitErr.Stderr)
+				if name == "ls" {
+					cmd := exec.Command(name, args...)
+					output, err := cmd.Output()
+
+					if err == nil {
+						result.Output = string(output)
 					} else {
-						result.Content = "Command err " + err.Error()
+						result.Error = err
 					}
 				} else {
-					result.Content = string(output)
+					result.Error = errors.New("ToolCall Error: command is not in approval list. Only ls is allowed.")
 				}
 			} else {
-				result.Content = "Command is not in approval list. Only ls is allowed."
+				result.Error = errors.New("ToolCall Error: shell command is empty. Please Check.")
 			}
 		} else {
-			result.Content = "ToolCall command is empty. Please Check."
+			result.Error = errors.New("ToolCall Error: shell command needs to be JSON")
 		}
 	} else {
-		result.Content = "ToolCall Error: toolcall name is not found."
+		result.Error = errors.New("ToolCall Error: toolcall name supports 'shell' only.")
 	}
 
 	return result

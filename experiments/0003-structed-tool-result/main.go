@@ -63,7 +63,7 @@ func main() {
 				//fmt.Println("\nToolCall: ", toolCall)
 				//fmt.Println("ToolCallResult: ", resultMsg)
 
-				contexter.Add(adapter.parseToolResult(toolResult))
+				contexter.Add(adapter.buildToolResult(toolResult))
 			}
 
 			if len(respMsg.ToolCalls) == 0 {

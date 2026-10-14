@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"os/exec"
 )
 
 type OpenAIAdapter struct {
@@ -71,7 +72,7 @@ func (adapter OpenAIAdapter) parseResponse(respBytes []byte) (Message, error) {
 
 func (adapter OpenAIAdapter) buildToolInvocation(toolCall OpenAIToolCall) ToolInvocation {
 	toolInvocation := ToolInvocation{
-		Id:        toolCall.Id,
+		ID:        toolCall.Id,
 		Name:      toolCall.Function.Name,
 		Arguments: toolCall.Function.Arguments,
 	}
@@ -79,11 +80,21 @@ func (adapter OpenAIAdapter) buildToolInvocation(toolCall OpenAIToolCall) ToolIn
 	return toolInvocation
 }
 
-func (adapter OpenAIAdapter) parseToolResult(toolResult ToolResult) Message {
+func (adapter OpenAIAdapter) buildToolResult(toolResult ToolResult) Message {
+	content := toolResult.Output
+	if toolResult.Error != nil {
+		var exitErr *exec.ExitError
+		if errors.As(toolResult.Error, &exitErr) {
+			content = "Command err " + string(exitErr.Stderr)
+		} else {
+			content = toolResult.Error.Error()
+		}
+	}
+
 	message := Message{
 		Role:       "tool",
-		Content:    toolResult.Content,
-		ToolCallID: toolResult.Id,
+		Content:    content,
+		ToolCallID: toolResult.InvocationID,
 	}
 	return message
 }
