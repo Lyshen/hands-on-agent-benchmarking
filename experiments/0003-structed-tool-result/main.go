@@ -19,8 +19,8 @@ func main() {
 
 	adapter := OpenAIAdapter{}
 
-	client := LLMClient{}
-	client.Init(&conf)
+	provider := LLMProvider{}
+	provider.Init(&conf)
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -37,24 +37,14 @@ func main() {
 		contexter.Add(Message{Role: "user", Content: userMsg})
 
 		for {
-			req, err := adapter.buildRequest(contexter)
+			req := adapter.buildOpenAIRequest(contexter)
+			resp, err := provider.send(req)
 			if err != nil {
 				fmt.Println(err)
 				break
 			}
 
-			respBytes, err := client.send(req)
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
-			respMsg, err := adapter.parseResponse(respBytes)
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-
+			respMsg := adapter.buildMessage(resp)
 			contexter.Add(respMsg)
 
 			for _, toolCall := range respMsg.ToolCalls {
@@ -63,7 +53,7 @@ func main() {
 				//fmt.Println("\nToolCall: ", toolCall)
 				//fmt.Println("ToolCallResult: ", resultMsg)
 
-				contexter.Add(adapter.buildToolResult(toolResult))
+				contexter.Add(adapter.buildOpenAIToolResultMessage(toolResult))
 			}
 
 			if len(respMsg.ToolCalls) == 0 {

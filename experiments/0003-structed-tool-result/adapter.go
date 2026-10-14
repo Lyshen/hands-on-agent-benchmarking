@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"os/exec"
 )
@@ -34,40 +33,23 @@ func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) OpenAITool {
 	return openAITool
 }
 
-func (adapter OpenAIAdapter) buildRequest(contexter Contexter) ([]byte, error) {
+func (adapter OpenAIAdapter) buildOpenAIRequest(contexter Contexter) OpenAIChatRequest {
 	openAITools := []OpenAITool{}
 	for _, tool := range contexter.Tools {
 		openAITools = append(openAITools, adapter.buildOpenAITool(tool))
 	}
 
-	chatReq := ChatRequest{
+	chatReq := OpenAIChatRequest{
 		Model:    contexter.Model,
 		Messages: contexter.Messages,
 		Tools:    openAITools,
 	}
 
-	var reqBytes []byte
-	reqBytes, err := json.Marshal(chatReq)
-	if err != nil {
-		return nil, err
-	}
-
-	return reqBytes, nil
+	return chatReq
 }
 
-func (adapter OpenAIAdapter) parseResponse(respBytes []byte) (Message, error) {
-	var resp ChatResponse
-	msg := Message{}
-	err := json.Unmarshal(respBytes, &resp)
-	if err != nil {
-		return msg, err
-	}
-
-	if len(resp.Choices) == 0 {
-		return msg, errors.New("no message found in response choices")
-	}
-
-	return resp.Choices[0].Message, nil
+func (adapter OpenAIAdapter) buildMessage(response OpenAIChatResponse) Message {
+	return response.Choices[0].Message
 }
 
 func (adapter OpenAIAdapter) buildToolInvocation(toolCall OpenAIToolCall) ToolInvocation {
@@ -80,7 +62,7 @@ func (adapter OpenAIAdapter) buildToolInvocation(toolCall OpenAIToolCall) ToolIn
 	return toolInvocation
 }
 
-func (adapter OpenAIAdapter) buildToolResult(toolResult ToolResult) Message {
+func (adapter OpenAIAdapter) buildOpenAIToolResultMessage(toolResult ToolResult) Message {
 	content := toolResult.Output
 	if toolResult.Error != nil {
 		var exitErr *exec.ExitError

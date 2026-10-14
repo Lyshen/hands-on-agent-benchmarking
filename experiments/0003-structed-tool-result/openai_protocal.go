@@ -7,7 +7,7 @@ type Message struct {
 	ToolCallID string           `json:"tool_call_id,omitempty"`
 }
 
-type ChatRequest struct {
+type OpenAIChatRequest struct {
 	Model    string       `json:"model"`
 	Messages []Message    `json:"messages"`
 	Tools    []OpenAITool `json:"tools"`
@@ -17,7 +17,7 @@ type Choice struct {
 	Message Message `json:"message"`
 }
 
-type ChatResponse struct {
+type OpenAIChatResponse struct {
 	Choices []Choice `json:"choices"`
 }
 
