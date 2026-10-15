@@ -9,7 +9,7 @@ type OpenAIAdapter struct {
 }
 
 func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) OpenAITool {
-	openAITool := OpenAITool{
+	return OpenAITool{
 		Type: "function",
 		Function: Function{
 			Name:        tool.Name,
@@ -29,8 +29,30 @@ func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) OpenAITool {
 			},
 		},
 	}
+}
 
-	return openAITool
+func (adapter OpenAIAdapter) buildOpenAIMessage(item Item) OpenAIMessage {
+	var role string
+	var content string
+	switch item.Kind {
+	case "system":
+		role = "system"
+		content = item.SystemPromptItem.Content
+	case "user":
+		role = "user"
+		content = item.UserItem.Content
+	case "assistant":
+		role = "assistant"
+		content = item.AssistantItem.Content
+	case "toolInvocation":
+		return adapter.buildOpenAIToolCallMessage(*item.ToolInvocation)
+	case "toolResult":
+		return adapter.buildOpenAIToolResultMessage(*item.ToolResult)
+	}
+	return OpenAIMessage{
+		Role:    role,
+		Content: content,
+	}
 }
 
 func (adapter OpenAIAdapter) buildOpenAIRequest(contexter Contexter) OpenAIChatRequest {
@@ -39,30 +61,51 @@ func (adapter OpenAIAdapter) buildOpenAIRequest(contexter Contexter) OpenAIChatR
 		openAITools = append(openAITools, adapter.buildOpenAITool(tool))
 	}
 
+	openAIMessages := []OpenAIMessage{}
+	for _, item := range contexter.Items {
+		openAIMessages = append(openAIMessages, adapter.buildOpenAIMessage(item))
+	}
+
 	chatReq := OpenAIChatRequest{
 		Model:    contexter.Model,
-		Messages: contexter.Messages,
+		Messages: openAIMessages,
 		Tools:    openAITools,
 	}
 
 	return chatReq
 }
 
-func (adapter OpenAIAdapter) buildMessage(response OpenAIChatResponse) Message {
+func (adapter OpenAIAdapter) buildMessage(response OpenAIChatResponse) OpenAIMessage {
 	return response.Choices[0].Message
 }
 
 func (adapter OpenAIAdapter) buildToolInvocation(toolCall OpenAIToolCall) ToolInvocation {
-	toolInvocation := ToolInvocation{
+	return ToolInvocation{
 		ID:        toolCall.Id,
 		Name:      toolCall.Function.Name,
 		Arguments: toolCall.Function.Arguments,
 	}
-
-	return toolInvocation
 }
 
-func (adapter OpenAIAdapter) buildOpenAIToolResultMessage(toolResult ToolResult) Message {
+func (adapter OpenAIAdapter) buildOpenAIToolCallMessage(toolInvocation ToolInvocation) OpenAIMessage {
+	message := OpenAIMessage{
+		Role: "assistant",
+		ToolCalls: []OpenAIToolCall{
+			{
+				Id: toolInvocation.ID,
+				Function: OpenAIToolCallSchema{
+					Name:      toolInvocation.Name,
+					Arguments: toolInvocation.Arguments,
+				},
+				Type: "function",
+			},
+		},
+	}
+
+	return message
+}
+
+func (adapter OpenAIAdapter) buildOpenAIToolResultMessage(toolResult ToolResult) OpenAIMessage {
 	content := toolResult.Output
 	if toolResult.Error != nil {
 		var exitErr *exec.ExitError
@@ -73,7 +116,7 @@ func (adapter OpenAIAdapter) buildOpenAIToolResultMessage(toolResult ToolResult)
 		}
 	}
 
-	message := Message{
+	message := OpenAIMessage{
 		Role:       "tool",
 		Content:    content,
 		ToolCallID: toolResult.InvocationID,

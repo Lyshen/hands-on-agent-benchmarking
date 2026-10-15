@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -47,6 +48,7 @@ func (provider LLMProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse,
 	}
 
 	respBytes, err := io.ReadAll(resp.Body)
+	fmt.Println(string(respBytes))
 	if err != nil {
 		return chatResp, err
 	}
@@ -55,6 +57,7 @@ func (provider LLMProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse,
 	if err != nil {
 		return chatResp, err
 	}
+	fmt.Println(chatResp)
 
 	if len(chatResp.Choices) == 0 {
 		return chatResp, errors.New("no message found in response choices")

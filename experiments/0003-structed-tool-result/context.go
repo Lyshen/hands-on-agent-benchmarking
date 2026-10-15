@@ -5,18 +5,18 @@ import (
 )
 
 type Contexter struct {
-	Model    string
-	Messages []Message
-	Tools    []Tool
+	Model string
+	Items []Item
+	Tools []Tool
 }
 
 func (c *Contexter) Init(model string) {
 	c.Model = model
 
-	c.Messages = []Message{
+	c.Items = []Item{
 		{
-			Role:    "system",
-			Content: "You are Mary. You are a lovely girl.",
+			Kind:             "system",
+			SystemPromptItem: &SystemPromptItem{Content: "You are Mary. You are a lovely girl."},
 		},
 	}
 
@@ -28,10 +28,12 @@ func (c *Contexter) Init(model string) {
 	}
 }
 
-func (c *Contexter) Add(message Message) {
-	c.Messages = append(c.Messages, message)
+func (c *Contexter) Add(item Item) {
+	c.Items = append(c.Items, item)
 }
 
 func (c *Contexter) Output() {
-	fmt.Println(c.Messages)
+	for _, item := range c.Items {
+		fmt.Println(item.Kind)
+	}
 }

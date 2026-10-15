@@ -33,9 +33,16 @@ func main() {
 			continue
 		}
 		userMsg = strings.Trim(userMsg, "\n")
+		userItem := Item{
+			Kind: "user",
+			UserItem: &UserItem{
+				Content: userMsg,
+			},
+		}
 
-		contexter.Add(Message{Role: "user", Content: userMsg})
+		contexter.Add(userItem)
 
+		var assistantItem Item
 		for {
 			req := adapter.buildOpenAIRequest(contexter)
 			resp, err := provider.send(req)
@@ -43,23 +50,36 @@ func main() {
 				fmt.Println(err)
 				break
 			}
-
 			respMsg := adapter.buildMessage(resp)
-			contexter.Add(respMsg)
+
+			if len(respMsg.ToolCalls) == 0 {
+				assistantItem = Item{
+					Kind: "assistant",
+					AssistantItem: &AssistantItem{
+						Content: respMsg.Content,
+					},
+				}
+				contexter.Add(assistantItem)
+				break
+			}
 
 			for _, toolCall := range respMsg.ToolCalls {
 				toolInvocation := adapter.buildToolInvocation(toolCall)
+				toolInvocationItem := Item{
+					Kind:           "toolInvocation",
+					ToolInvocation: &toolInvocation,
+				}
+				contexter.Add(toolInvocationItem)
+
 				toolResult := execute(toolInvocation)
-				//fmt.Println("\nToolCall: ", toolCall)
-				//fmt.Println("ToolCallResult: ", resultMsg)
-
-				contexter.Add(adapter.buildOpenAIToolResultMessage(toolResult))
-			}
-
-			if len(respMsg.ToolCalls) == 0 {
-				fmt.Println("Assistant: ", respMsg.Content)
-				break
+				toolResultItem := Item{
+					Kind:       "toolResult",
+					ToolResult: &toolResult,
+				}
+				contexter.Add(toolResultItem)
 			}
 		}
+
+		fmt.Println("Assistant: ", assistantItem.AssistantItem.Content)
 	}
 }
