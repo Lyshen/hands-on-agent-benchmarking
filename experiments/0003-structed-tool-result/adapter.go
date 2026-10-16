@@ -7,27 +7,43 @@ import (
 type OpenAIAdapter struct {
 }
 
-func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) OpenAITool {
+func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) (OpenAITool, error) {
+	properties := make(map[string]any, len(tool.Parameters))
+	required := make([]string, 0, len(tool.Parameters))
+
+	for _, parameter := range tool.Parameters {
+		var schemaType string
+
+		switch parameter.Type {
+		case ParameterString:
+			schemaType = "string"
+		default:
+			return OpenAITool{}, errors.New(tool.Name + " unsupported parameter type ")
+		}
+
+		properties[parameter.Name] = map[string]any{
+			"type":        schemaType,
+			"description": parameter.Description,
+		}
+
+		if parameter.Required {
+			required = append(required, parameter.Name)
+		}
+	}
+
 	return OpenAITool{
 		Type: "function",
 		Function: Function{
 			Name:        tool.Name,
 			Description: tool.Description,
 			Parameters: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"command": map[string]any{
-						"type":        "string",
-						"description": "The command to run.",
-					},
-				},
-				"required": []string{
-					"command",
-				},
+				"type":                 "object",
+				"properties":           properties,
+				"required":             required,
 				"additionalProperties": false,
 			},
 		},
-	}
+	}, nil
 }
 
 func (adapter OpenAIAdapter) buildOpenAIMessage(item TranscriptItem) OpenAIMessage {
@@ -57,7 +73,10 @@ func (adapter OpenAIAdapter) buildOpenAIMessage(item TranscriptItem) OpenAIMessa
 func (adapter OpenAIAdapter) buildOpenAIRequest(context Context) OpenAIChatRequest {
 	openAITools := []OpenAITool{}
 	for _, tool := range context.Tools {
-		openAITools = append(openAITools, adapter.buildOpenAITool(tool))
+		openAITool, err := adapter.buildOpenAITool(tool)
+		if err == nil {
+			openAITools = append(openAITools, openAITool)
+		}
 	}
 
 	openAIMessages := []OpenAIMessage{}

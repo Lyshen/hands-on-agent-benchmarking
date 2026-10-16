@@ -23,6 +23,14 @@ func (c *Context) Init(model string) {
 		{
 			Name:        "shell",
 			Description: "Run an allowed read-only command in the journal workspace.",
+			Parameters: []ToolParameter{
+				{
+					Name:        "command",
+					Description: "The command to run.",
+					Type:        ParameterString,
+					Required:    true,
+				},
+			},
 		},
 	}
 }

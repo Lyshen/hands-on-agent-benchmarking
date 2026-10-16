@@ -34,9 +34,23 @@ type ToolResultItem struct {
 
 func (i ToolResultItem) isTranscriptItem() {}
 
+type ParameterType string
+
+const (
+	ParameterString ParameterType = "string"
+)
+
+type ToolParameter struct {
+	Name        string
+	Description string
+	Type        ParameterType
+	Required    bool
+}
+
 type Tool struct {
 	Name        string
 	Description string
+	Parameters  []ToolParameter
 }
 
 type ToolInvocation struct {

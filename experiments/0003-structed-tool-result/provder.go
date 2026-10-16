@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -25,7 +26,7 @@ func (provider LLMProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse,
 	if err != nil {
 		return chatResp, err
 	}
-
+	fmt.Println(string(reqBytes))
 	body := bytes.NewReader(reqBytes)
 	req, err := http.NewRequest("POST", provider.Conf.URL, body)
 	if err != nil {
@@ -50,7 +51,7 @@ func (provider LLMProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse,
 	if err != nil {
 		return chatResp, err
 	}
-
+	fmt.Println(string(respBytes))
 	err = json.Unmarshal(respBytes, &chatResp)
 	if err != nil {
 		return chatResp, err
