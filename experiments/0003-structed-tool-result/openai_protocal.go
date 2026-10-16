@@ -30,25 +30,9 @@ type OpenAITool struct {
 }
 
 type Function struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Parameters  Parameters `json:"parameters"`
-}
-
-type Parameters struct {
-	Type                 string     `json:"type"`
-	Properties           Properties `json:"properties"`
-	Required             []string   `json:"required"`
-	AdditionalProperties bool       `json:"additionalProperties"`
-}
-
-type Properties struct {
-	Command Command `json:"command"`
-}
-
-type Command struct {
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Parameters  map[string]any `json:"parameters"`
 }
 
 type OpenAIChatResponse struct {
@@ -58,8 +42,6 @@ type OpenAIChatResponse struct {
 type Choice struct {
 	Message OpenAIMessage `json:"message"`
 }
-
-// Tool
 
 type ShellCommand struct {
 	Command string `json:"command"`

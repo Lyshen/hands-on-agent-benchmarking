@@ -13,18 +13,18 @@ func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) OpenAITool {
 		Function: Function{
 			Name:        tool.Name,
 			Description: tool.Description,
-			Parameters: Parameters{
-				Type: "object",
-				Properties: Properties{
-					Command: Command{
-						Type:        "string",
-						Description: "The command to run.",
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"command": map[string]any{
+						"type":        "string",
+						"description": "The command to run.",
 					},
 				},
-				Required: []string{
+				"required": []string{
 					"command",
 				},
-				AdditionalProperties: false,
+				"additionalProperties": false,
 			},
 		},
 	}
