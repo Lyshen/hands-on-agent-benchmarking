@@ -29,8 +29,11 @@ func execute(toolInvocation ToolInvocation) ToolResult {
 					cmd := exec.Command(name, args...)
 					output, err := cmd.Output()
 
+					var exitErr *exec.ExitError
 					if err == nil {
 						result.Output = string(output)
+					} else if errors.As(err, &exitErr) {
+						result.Error = errors.New("Command err " + string(exitErr.Stderr))
 					} else {
 						result.Error = err
 					}

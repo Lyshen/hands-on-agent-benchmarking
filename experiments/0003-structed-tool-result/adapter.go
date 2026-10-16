@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"os/exec"
 )
 
 type OpenAIAdapter struct {
@@ -75,10 +74,6 @@ func (adapter OpenAIAdapter) buildOpenAIRequest(context Context) OpenAIChatReque
 	return chatReq
 }
 
-func (adapter OpenAIAdapter) buildMessage(response OpenAIChatResponse) OpenAIMessage {
-	return response.Choices[0].Message
-}
-
 func (adapter OpenAIAdapter) buildTranscriptItem(response OpenAIChatResponse) (TranscriptItem, error) {
 	if len(response.Choices) == 0 {
 		return AssistantItem{}, errors.New("no message found in response choices")
@@ -101,14 +96,6 @@ func (adapter OpenAIAdapter) buildTranscriptItem(response OpenAIChatResponse) (T
 	}
 
 	return toolCallsItem, nil
-}
-
-func (adapter OpenAIAdapter) buildToolInvocation(toolCall OpenAIToolCall) ToolInvocation {
-	return ToolInvocation{
-		ID:        toolCall.Id,
-		Name:      toolCall.Function.Name,
-		Arguments: toolCall.Function.Arguments,
-	}
 }
 
 func (adapter OpenAIAdapter) buildOpenAIToolCallMessage(item ToolCallsItem) OpenAIMessage {
@@ -135,12 +122,7 @@ func (adapter OpenAIAdapter) buildOpenAIToolCallMessage(item ToolCallsItem) Open
 func (adapter OpenAIAdapter) buildOpenAIToolResultMessage(item ToolResultItem) OpenAIMessage {
 	content := item.Result.Output
 	if item.Result.Error != nil {
-		var exitErr *exec.ExitError
-		if errors.As(item.Result.Error, &exitErr) {
-			content = "Command err " + string(exitErr.Stderr)
-		} else {
-			content = item.Result.Error.Error()
-		}
+		content = item.Result.Error.Error()
 	}
 
 	message := OpenAIMessage{
