@@ -14,8 +14,8 @@ func main() {
 		return
 	}
 
-	contexter := Contexter{}
-	contexter.Init(conf.Model)
+	context := Context{}
+	context.Init(conf.Model)
 
 	adapter := OpenAIAdapter{}
 
@@ -33,53 +33,40 @@ func main() {
 			continue
 		}
 		userMsg = strings.Trim(userMsg, "\n")
-		userItem := Item{
-			Kind: "user",
-			UserItem: &UserItem{
-				Content: userMsg,
-			},
-		}
 
-		contexter.Add(userItem)
+		context.Add(UserItem{Content: userMsg})
 
-		var assistantItem Item
+		var assistantItem AssistantItem
+	modelLoop:
 		for {
-			req := adapter.buildOpenAIRequest(contexter)
+			req := adapter.buildOpenAIRequest(context)
 			resp, err := provider.send(req)
 			if err != nil {
 				fmt.Println(err)
-				break
-			}
-			respMsg := adapter.buildMessage(resp)
-
-			if len(respMsg.ToolCalls) == 0 {
-				assistantItem = Item{
-					Kind: "assistant",
-					AssistantItem: &AssistantItem{
-						Content: respMsg.Content,
-					},
-				}
-				contexter.Add(assistantItem)
-				break
+				break modelLoop
 			}
 
-			for _, toolCall := range respMsg.ToolCalls {
-				toolInvocation := adapter.buildToolInvocation(toolCall)
-				toolInvocationItem := Item{
-					Kind:           "toolInvocation",
-					ToolInvocation: &toolInvocation,
-				}
-				contexter.Add(toolInvocationItem)
+			item, err := adapter.buildTranscriptItem(resp)
+			if err != nil {
+				fmt.Println(err)
+				break modelLoop
+			}
 
-				toolResult := execute(toolInvocation)
-				toolResultItem := Item{
-					Kind:       "toolResult",
-					ToolResult: &toolResult,
+			switch value := item.(type) {
+			case AssistantItem:
+				context.Add(value)
+				assistantItem = value
+				break modelLoop
+
+			case ToolCallsItem:
+				context.Add(value)
+				for _, toolInvocation := range value.Calls {
+					toolResult := execute(toolInvocation)
+					context.Add(ToolResultItem{Result: toolResult})
 				}
-				contexter.Add(toolResultItem)
 			}
 		}
 
-		fmt.Println("Assistant: ", assistantItem.AssistantItem.Content)
+		fmt.Println("Assistant: ", assistantItem.Content)
 	}
 }

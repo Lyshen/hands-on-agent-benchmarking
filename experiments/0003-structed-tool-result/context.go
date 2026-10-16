@@ -4,19 +4,18 @@ import (
 	"fmt"
 )
 
-type Contexter struct {
-	Model string
-	Items []Item
-	Tools []Tool
+type Context struct {
+	Model      string
+	Transcript []TranscriptItem
+	Tools      []Tool
 }
 
-func (c *Contexter) Init(model string) {
+func (c *Context) Init(model string) {
 	c.Model = model
 
-	c.Items = []Item{
-		{
-			Kind:             "system",
-			SystemPromptItem: &SystemPromptItem{Content: "You are Mary. You are a lovely girl."},
+	c.Transcript = []TranscriptItem{
+		SystemPromptItem{
+			Content: "You are Mary. You are a lovely girl.",
 		},
 	}
 
@@ -28,12 +27,12 @@ func (c *Contexter) Init(model string) {
 	}
 }
 
-func (c *Contexter) Add(item Item) {
-	c.Items = append(c.Items, item)
+func (c *Context) Add(item TranscriptItem) {
+	c.Transcript = append(c.Transcript, item)
 }
 
-func (c *Contexter) Output() {
-	for _, item := range c.Items {
-		fmt.Println(item.Kind)
+func (c *Context) Output() {
+	for _, item := range c.Transcript {
+		fmt.Println(item)
 	}
 }

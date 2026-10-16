@@ -59,9 +59,5 @@ func (provider LLMProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse,
 	}
 	fmt.Println(chatResp)
 
-	if len(chatResp.Choices) == 0 {
-		return chatResp, errors.New("no message found in response choices")
-	}
-
 	return chatResp, nil
 }
