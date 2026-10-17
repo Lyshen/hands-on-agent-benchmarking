@@ -9,19 +9,9 @@ import (
 	"strings"
 )
 
-func runTurn(state *Context, provider *LLMProvider, adapter *OpenAIAdapter) (AssistantItem, error) {
+func runTurn(state *Context, provider Provider) (AssistantItem, error) {
 	for {
-		req, err := adapter.buildOpenAIRequest(*state)
-		if err != nil {
-			return AssistantItem{}, err
-		}
-
-		resp, err := provider.send(req)
-		if err != nil {
-			return AssistantItem{}, err
-		}
-
-		item, err := adapter.buildTranscriptItem(resp)
+		item, err := provider.Generate(state)
 		if err != nil {
 			return AssistantItem{}, err
 		}
@@ -69,9 +59,9 @@ func main() {
 
 	state := Context{}
 	state.Init(conf.Model)
-	provider := LLMProvider{}
+	provider := OpenAIProvider{}
 	provider.Init(&conf)
-	adapter := OpenAIAdapter{}
+	//adapter := OpenAIAdapter{}
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -86,7 +76,7 @@ func main() {
 
 		state.Add(userItem)
 
-		assistantItem, err := runTurn(&state, &provider, &adapter)
+		assistantItem, err := runTurn(&state, &provider)
 		if err != nil {
 			fmt.Println(err)
 		} else {

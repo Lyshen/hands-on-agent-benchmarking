@@ -8,17 +8,42 @@ import (
 	"net/http"
 )
 
-type LLMProvider struct {
-	Conf   *Config
-	Client *http.Client
+type Provider interface {
+	Generate(state *Context) (TranscriptItem, error)
 }
 
-func (provider *LLMProvider) Init(conf *Config) {
+type OpenAIProvider struct {
+	Conf    *Config
+	Client  *http.Client
+	Adapter OpenAIAdapter
+}
+
+func (provider OpenAIProvider) Generate(state *Context) (TranscriptItem, error) {
+	req, err := provider.Adapter.buildOpenAIRequest(*state)
+	if err != nil {
+		return AssistantItem{}, err
+	}
+
+	resp, err := provider.send(req)
+	if err != nil {
+		return AssistantItem{}, err
+	}
+
+	item, err := provider.Adapter.buildTranscriptItem(resp)
+	if err != nil {
+		return AssistantItem{}, err
+	}
+
+	return item, nil
+}
+
+func (provider *OpenAIProvider) Init(conf *Config) {
 	provider.Conf = conf
 	provider.Client = &http.Client{}
+	provider.Adapter = OpenAIAdapter{}
 }
 
-func (provider LLMProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse, error) {
+func (provider OpenAIProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse, error) {
 	chatResp := OpenAIChatResponse{}
 	var reqBytes []byte
 	reqBytes, err := json.Marshal(chatReq)
