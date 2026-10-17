@@ -9,7 +9,11 @@ import (
 
 func runTurn(state *Context, provider *LLMProvider, adapter *OpenAIAdapter) (AssistantItem, error) {
 	for {
-		req := adapter.buildOpenAIRequest(*state)
+		req, err := adapter.buildOpenAIRequest(*state)
+		if err != nil {
+			return AssistantItem{}, err
+		}
+
 		resp, err := provider.send(req)
 		if err != nil {
 			return AssistantItem{}, err
@@ -30,6 +34,9 @@ func runTurn(state *Context, provider *LLMProvider, adapter *OpenAIAdapter) (Ass
 			for _, toolInvocation := range value.Calls {
 				toolResult := execute(toolInvocation)
 				state.Add(ToolResultItem{Result: toolResult})
+				fmt.Println(toolInvocation)
+				fmt.Println(toolResult)
+				fmt.Println()
 			}
 		}
 	}

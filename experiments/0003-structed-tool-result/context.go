@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 type Context struct {
 	Model      string
 	Transcript []TranscriptItem
@@ -37,10 +33,4 @@ func (c *Context) Init(model string) {
 
 func (c *Context) Add(item TranscriptItem) {
 	c.Transcript = append(c.Transcript, item)
-}
-
-func (c *Context) Output() {
-	for _, item := range c.Transcript {
-		fmt.Println(item)
-	}
 }

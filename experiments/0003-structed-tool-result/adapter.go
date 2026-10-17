@@ -46,42 +46,40 @@ func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) (OpenAITool, error) {
 	}, nil
 }
 
-func (adapter OpenAIAdapter) buildOpenAIMessage(item TranscriptItem) OpenAIMessage {
-	var role string
-	var content string
+func (adapter OpenAIAdapter) buildOpenAIMessage(item TranscriptItem) (OpenAIMessage, error) {
 	switch value := item.(type) {
 	case SystemPromptItem:
-		role = "system"
-		content = value.Content
+		return OpenAIMessage{Role: "system", Content: value.Content}, nil
 	case UserItem:
-		role = "user"
-		content = value.Content
+		return OpenAIMessage{Role: "user", Content: value.Content}, nil
 	case AssistantItem:
-		role = "assistant"
-		content = value.Content
+		return OpenAIMessage{Role: "assistant", Content: value.Content}, nil
 	case ToolCallsItem:
-		return adapter.buildOpenAIToolCallMessage(value)
+		return adapter.buildOpenAIToolCallMessage(value), nil
 	case ToolResultItem:
-		return adapter.buildOpenAIToolResultMessage(value)
+		return adapter.buildOpenAIToolResultMessage(value), nil
 	}
-	return OpenAIMessage{
-		Role:    role,
-		Content: content,
-	}
+	return OpenAIMessage{}, errors.New("TranscriptItem type is not found, please check")
 }
 
-func (adapter OpenAIAdapter) buildOpenAIRequest(context Context) OpenAIChatRequest {
+func (adapter OpenAIAdapter) buildOpenAIRequest(context Context) (OpenAIChatRequest, error) {
 	openAITools := []OpenAITool{}
 	for _, tool := range context.Tools {
 		openAITool, err := adapter.buildOpenAITool(tool)
 		if err == nil {
 			openAITools = append(openAITools, openAITool)
+		} else {
+			return OpenAIChatRequest{}, err
 		}
 	}
 
 	openAIMessages := []OpenAIMessage{}
 	for _, item := range context.Transcript {
-		openAIMessages = append(openAIMessages, adapter.buildOpenAIMessage(item))
+		message, err := adapter.buildOpenAIMessage(item)
+		if err != nil {
+			return OpenAIChatRequest{}, err
+		}
+		openAIMessages = append(openAIMessages, message)
 	}
 
 	chatReq := OpenAIChatRequest{
@@ -90,7 +88,7 @@ func (adapter OpenAIAdapter) buildOpenAIRequest(context Context) OpenAIChatReque
 		Tools:    openAITools,
 	}
 
-	return chatReq
+	return chatReq, nil
 }
 
 func (adapter OpenAIAdapter) buildTranscriptItem(response OpenAIChatResponse) (TranscriptItem, error) {
