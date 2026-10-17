@@ -7,6 +7,34 @@ import (
 	"strings"
 )
 
+func runTurn(state *Context, provider *LLMProvider, adapter *OpenAIAdapter) (AssistantItem, error) {
+	for {
+		req := adapter.buildOpenAIRequest(*state)
+		resp, err := provider.send(req)
+		if err != nil {
+			return AssistantItem{}, err
+		}
+
+		item, err := adapter.buildTranscriptItem(resp)
+		if err != nil {
+			return AssistantItem{}, err
+		}
+
+		switch value := item.(type) {
+		case AssistantItem:
+			state.Add(value)
+			return value, nil
+
+		case ToolCallsItem:
+			state.Add(value)
+			for _, toolInvocation := range value.Calls {
+				toolResult := execute(toolInvocation)
+				state.Add(ToolResultItem{Result: toolResult})
+			}
+		}
+	}
+}
+
 func main() {
 	conf, err := loadConfig("config.local.json")
 	if err != nil {
@@ -14,17 +42,15 @@ func main() {
 		return
 	}
 
-	context := Context{}
-	context.Init(conf.Model)
-
-	adapter := OpenAIAdapter{}
-
+	state := Context{}
+	state.Init(conf.Model)
 	provider := LLMProvider{}
 	provider.Init(&conf)
+	adapter := OpenAIAdapter{}
 
 	reader := bufio.NewReader(os.Stdin)
+
 	for {
-		//contexter.Output()
 		fmt.Print("\n\nYou: ")
 
 		userMsg, err := reader.ReadString('\n')
@@ -34,39 +60,13 @@ func main() {
 		}
 		userMsg = strings.Trim(userMsg, "\n")
 
-		context.Add(UserItem{Content: userMsg})
+		state.Add(UserItem{Content: userMsg})
 
-		var assistantItem AssistantItem
-	modelLoop:
-		for {
-			req := adapter.buildOpenAIRequest(context)
-			resp, err := provider.send(req)
-			if err != nil {
-				fmt.Println(err)
-				break modelLoop
-			}
-
-			item, err := adapter.buildTranscriptItem(resp)
-			if err != nil {
-				fmt.Println(err)
-				break modelLoop
-			}
-
-			switch value := item.(type) {
-			case AssistantItem:
-				context.Add(value)
-				assistantItem = value
-				break modelLoop
-
-			case ToolCallsItem:
-				context.Add(value)
-				for _, toolInvocation := range value.Calls {
-					toolResult := execute(toolInvocation)
-					context.Add(ToolResultItem{Result: toolResult})
-				}
-			}
+		assistantItem, err := runTurn(&state, &provider, &adapter)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("Assistant: ", assistantItem.Content)
 		}
-
-		fmt.Println("Assistant: ", assistantItem.Content)
 	}
 }
