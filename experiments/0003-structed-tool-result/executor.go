@@ -37,6 +37,7 @@ func execute(toolInvocation ToolInvocation) ToolResult {
 	args := fields[1:]
 	if name != "ls" {
 		result.Error = errors.New("ToolCall Error: command is not in approval list. Only ls is allowed.")
+		return result
 	}
 
 	cmd := exec.Command(name, args...)

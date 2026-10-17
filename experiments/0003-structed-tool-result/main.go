@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -34,12 +36,28 @@ func runTurn(state *Context, provider *LLMProvider, adapter *OpenAIAdapter) (Ass
 			for _, toolInvocation := range value.Calls {
 				toolResult := execute(toolInvocation)
 				state.Add(ToolResultItem{Result: toolResult})
-				fmt.Println(toolInvocation)
-				fmt.Println(toolResult)
-				fmt.Println()
 			}
 		}
 	}
+}
+
+func readUserMessage(reader *bufio.Reader) (UserItem, error) {
+
+	userMsg, err := reader.ReadString('\n')
+	eof := errors.Is(err, io.EOF)
+
+	if err != nil && !eof {
+		return UserItem{}, err
+	}
+
+	if eof && len(userMsg) == 0 {
+		return UserItem{}, errors.New("stdin is end")
+	}
+
+	userMsg = strings.TrimSuffix(userMsg, "\n")
+	userMsg = strings.TrimSuffix(userMsg, "\r")
+
+	return UserItem{Content: userMsg}, nil
 }
 
 func main() {
@@ -60,14 +78,13 @@ func main() {
 	for {
 		fmt.Print("\n\nYou: ")
 
-		userMsg, err := reader.ReadString('\n')
+		userItem, err := readUserMessage(reader)
 		if err != nil {
-			fmt.Println("fail to read user message ", err)
-			continue
+			fmt.Println("fail to read user message: ", err)
+			return
 		}
-		userMsg = strings.Trim(userMsg, "\n")
 
-		state.Add(UserItem{Content: userMsg})
+		state.Add(userItem)
 
 		assistantItem, err := runTurn(&state, &provider, &adapter)
 		if err != nil {
