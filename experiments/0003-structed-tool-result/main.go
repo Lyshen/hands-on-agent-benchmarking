@@ -61,7 +61,7 @@ func readUserMessage(reader *bufio.Reader) (UserItem, error) {
 }
 
 func main() {
-	conf, err := loadConfig("config.local.json")
+	conf, err := loadConfig("conf/config.local.json")
 	if err != nil {
 		fmt.Println("fail to load config: ", err)
 		return
