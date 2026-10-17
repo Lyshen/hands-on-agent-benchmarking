@@ -29,12 +29,7 @@ func (provider OpenAIProvider) Generate(state *Context) (TranscriptItem, error) 
 		return AssistantItem{}, err
 	}
 
-	item, err := provider.Adapter.buildTranscriptItem(resp)
-	if err != nil {
-		return AssistantItem{}, err
-	}
-
-	return item, nil
+	return provider.Adapter.buildTranscriptItem(resp)
 }
 
 func (provider *OpenAIProvider) Init(conf *Config) {

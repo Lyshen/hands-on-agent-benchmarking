@@ -61,7 +61,6 @@ func main() {
 	state.Init(conf.Model)
 	provider := OpenAIProvider{}
 	provider.Init(&conf)
-	//adapter := OpenAIAdapter{}
 
 	reader := bufio.NewReader(os.Stdin)
 
