@@ -9,7 +9,7 @@ type Config struct {
 	URL      string `json:"url"`
 	APIKey   string `json:"apikey"`
 	Model    string `json:"model"`
-	Protocal string `json:"protocal"`
+	Protocol string `json:"protocol"`
 }
 
 func loadConfig(filename string) (Config, error) {

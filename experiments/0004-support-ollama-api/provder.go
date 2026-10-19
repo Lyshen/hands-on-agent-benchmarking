@@ -9,7 +9,7 @@ type Provider interface {
 }
 
 func NewProvider(conf *Config) (Provider, error) {
-	switch conf.Protocal {
+	switch conf.Protocol {
 	case "openai":
 		provider := &OpenAIProvider{}
 		provider.Init(conf)
@@ -19,6 +19,6 @@ func NewProvider(conf *Config) (Provider, error) {
 		provider.Init(conf)
 		return provider, nil
 	default:
-		return nil, errors.New("Provider protocal is not supported")
+		return nil, errors.New("Provider protocol is not supported")
 	}
 }
