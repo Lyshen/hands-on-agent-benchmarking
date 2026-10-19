@@ -56,9 +56,9 @@ func main() {
 		fmt.Println("fail to load config: ", err)
 		return
 	}
-   
+
 	provider, err := NewProvider(&conf)
-    if err != nil {
+	if err != nil {
 		fmt.Println("fail to init provider: ", err)
 		return
 	}

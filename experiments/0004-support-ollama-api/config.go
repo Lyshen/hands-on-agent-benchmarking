@@ -6,9 +6,9 @@ import (
 )
 
 type Config struct {
-	URL    string `json:"url"`
-	APIKey string `json:"apikey"`
-	Model  string `json:"model"`
+	URL      string `json:"url"`
+	APIKey   string `json:"apikey"`
+	Model    string `json:"model"`
 	Protocal string `json:"protocal"`
 }
 
