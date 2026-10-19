@@ -56,11 +56,14 @@ func main() {
 		fmt.Println("fail to load config: ", err)
 		return
 	}
-
+   
+	provider, err := NewProvider(&conf)
+    if err != nil {
+		fmt.Println("fail to init provider: ", err)
+		return
+	}
 	state := Context{}
 	state.Init(conf.Model)
-	provider := OpenAIProvider{}
-	provider.Init(&conf)
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -75,7 +78,7 @@ func main() {
 
 		state.Add(userItem)
 
-		assistantItem, err := runTurn(&state, &provider)
+		assistantItem, err := runTurn(&state, provider)
 		if err != nil {
 			fmt.Println(err)
 		} else {

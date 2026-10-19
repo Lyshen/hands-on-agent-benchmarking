@@ -26,10 +26,10 @@ type OpenAIToolCallSchema struct {
 
 type OpenAITool struct {
 	Type     string   `json:"type"`
-	Function Function `json:"function"`
+	Function OpenAIFunction `json:"function"`
 }
 
-type Function struct {
+type OpenAIFunction struct {
 	Name        string         `json:"name"`
 	Description string         `json:"description"`
 	Parameters  map[string]any `json:"parameters"`

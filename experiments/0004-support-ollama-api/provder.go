@@ -1,79 +1,25 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
 )
 
 type Provider interface {
 	Generate(state *Context) (TranscriptItem, error)
 }
 
-type OpenAIProvider struct {
-	Conf    *Config
-	Client  *http.Client
-	Adapter OpenAIAdapter
+func NewProvider(conf *Config) (Provider, error) {
+	switch conf.Protocal {
+    case "openai":
+		provider := &OpenAIProvider{}
+		provider.Init(conf)
+		return provider, nil
+	case "ollama":
+		provider := &OllamaProvider{}
+		provider.Init(conf)
+		return provider, nil
+	default:
+		return nil, errors.New("Provider protocal is not supported")
+	}
 }
 
-func (provider OpenAIProvider) Generate(state *Context) (TranscriptItem, error) {
-	req, err := provider.Adapter.buildOpenAIRequest(*state)
-	if err != nil {
-		return AssistantItem{}, err
-	}
-
-	resp, err := provider.send(req)
-	if err != nil {
-		return AssistantItem{}, err
-	}
-
-	return provider.Adapter.buildTranscriptItem(resp)
-}
-
-func (provider *OpenAIProvider) Init(conf *Config) {
-	provider.Conf = conf
-	provider.Client = &http.Client{}
-	provider.Adapter = OpenAIAdapter{}
-}
-
-func (provider OpenAIProvider) send(chatReq OpenAIChatRequest) (OpenAIChatResponse, error) {
-	chatResp := OpenAIChatResponse{}
-	var reqBytes []byte
-	reqBytes, err := json.Marshal(chatReq)
-	if err != nil {
-		return chatResp, err
-	}
-
-	body := bytes.NewReader(reqBytes)
-	req, err := http.NewRequest("POST", provider.Conf.URL, body)
-	if err != nil {
-		return chatResp, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("authorization", "Bearer "+provider.Conf.APIKey)
-
-	resp, err := provider.Client.Do(req)
-	if err != nil {
-		return chatResp, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return chatResp, errors.New("fail to get response " + resp.Status)
-	}
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return chatResp, err
-	}
-	err = json.Unmarshal(respBytes, &chatResp)
-	if err != nil {
-		return chatResp, err
-	}
-
-	return chatResp, nil
-}

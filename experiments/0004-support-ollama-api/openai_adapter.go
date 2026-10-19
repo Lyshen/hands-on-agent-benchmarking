@@ -7,7 +7,7 @@ import (
 type OpenAIAdapter struct {
 }
 
-func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) (OpenAITool, error) {
+func (adapter OpenAIAdapter) buildTool(tool Tool) (OpenAITool, error) {
 	properties := make(map[string]any, len(tool.Parameters))
 	required := make([]string, 0, len(tool.Parameters))
 
@@ -33,7 +33,7 @@ func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) (OpenAITool, error) {
 
 	return OpenAITool{
 		Type: "function",
-		Function: Function{
+		Function: OpenAIFunction{
 			Name:        tool.Name,
 			Description: tool.Description,
 			Parameters: map[string]any{
@@ -46,7 +46,7 @@ func (adapter OpenAIAdapter) buildOpenAITool(tool Tool) (OpenAITool, error) {
 	}, nil
 }
 
-func (adapter OpenAIAdapter) buildOpenAIMessage(item TranscriptItem) (OpenAIMessage, error) {
+func (adapter OpenAIAdapter) buildMessage(item TranscriptItem) (OpenAIMessage, error) {
 	switch value := item.(type) {
 	case SystemPromptItem:
 		return OpenAIMessage{Role: "system", Content: value.Content}, nil
@@ -55,17 +55,17 @@ func (adapter OpenAIAdapter) buildOpenAIMessage(item TranscriptItem) (OpenAIMess
 	case AssistantItem:
 		return OpenAIMessage{Role: "assistant", Content: value.Content}, nil
 	case ToolCallsItem:
-		return adapter.buildOpenAIToolCallMessage(value), nil
+		return adapter.buildToolCallMessage(value), nil
 	case ToolResultItem:
-		return adapter.buildOpenAIToolResultMessage(value), nil
+		return adapter.buildToolResultMessage(value), nil
 	}
 	return OpenAIMessage{}, errors.New("TranscriptItem type is not found, please check")
 }
 
-func (adapter OpenAIAdapter) buildOpenAIRequest(context Context) (OpenAIChatRequest, error) {
+func (adapter OpenAIAdapter) buildRequest(context Context) (OpenAIChatRequest, error) {
 	openAITools := []OpenAITool{}
 	for _, tool := range context.Tools {
-		openAITool, err := adapter.buildOpenAITool(tool)
+		openAITool, err := adapter.buildTool(tool)
 		if err == nil {
 			openAITools = append(openAITools, openAITool)
 		} else {
@@ -75,7 +75,7 @@ func (adapter OpenAIAdapter) buildOpenAIRequest(context Context) (OpenAIChatRequ
 
 	openAIMessages := []OpenAIMessage{}
 	for _, item := range context.Transcript {
-		message, err := adapter.buildOpenAIMessage(item)
+		message, err := adapter.buildMessage(item)
 		if err != nil {
 			return OpenAIChatRequest{}, err
 		}
@@ -115,7 +115,7 @@ func (adapter OpenAIAdapter) buildTranscriptItem(response OpenAIChatResponse) (T
 	return toolCallsItem, nil
 }
 
-func (adapter OpenAIAdapter) buildOpenAIToolCallMessage(item ToolCallsItem) OpenAIMessage {
+func (adapter OpenAIAdapter) buildToolCallMessage(item ToolCallsItem) OpenAIMessage {
 	calls := []OpenAIToolCall{}
 	for _, call := range item.Calls {
 		calls = append(calls, OpenAIToolCall{
@@ -136,7 +136,7 @@ func (adapter OpenAIAdapter) buildOpenAIToolCallMessage(item ToolCallsItem) Open
 	return message
 }
 
-func (adapter OpenAIAdapter) buildOpenAIToolResultMessage(item ToolResultItem) OpenAIMessage {
+func (adapter OpenAIAdapter) buildToolResultMessage(item ToolResultItem) OpenAIMessage {
 	content := item.Result.Output
 	if item.Result.Error != nil {
 		content = item.Result.Error.Error()
