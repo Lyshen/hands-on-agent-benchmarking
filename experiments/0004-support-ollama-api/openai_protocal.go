@@ -25,7 +25,7 @@ type OpenAIToolCallSchema struct {
 }
 
 type OpenAITool struct {
-	Type     string   `json:"type"`
+	Type     string         `json:"type"`
 	Function OpenAIFunction `json:"function"`
 }
 

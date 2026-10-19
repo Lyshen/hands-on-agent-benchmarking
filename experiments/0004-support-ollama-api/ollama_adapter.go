@@ -1,9 +1,8 @@
 package main
 
 import (
-	"errors"
 	"encoding/json"
-	"fmt"
+	"errors"
 )
 
 type OllamaAdapter struct {
@@ -94,21 +93,19 @@ func (adapter OllamaAdapter) buildRequest(context Context) (OllamaChatRequest, e
 }
 
 func (adapter OllamaAdapter) buildTranscriptItem(response OllamaChatResponse) (TranscriptItem, error) {
-    fmt.Println(response.Message)
-    fmt.Println(response.Message.ToolCalls)
 	if len(response.Message.ToolCalls) == 0 {
 		return AssistantItem{Content: response.Message.Content}, nil
 	}
-    fmt.Println(len(response.Message.ToolCalls))
+
 	toolInvocations := []ToolInvocation{}
 	for _, toolCall := range response.Message.ToolCalls {
-        data, err := json.Marshal(toolCall.Function.Arguments)
+		data, err := json.Marshal(toolCall.Function.Arguments)
 		if err != nil {
-            return AssistantItem{}, err
+			return AssistantItem{}, err
 		}
 
 		toolInvocations = append(toolInvocations, ToolInvocation{
-			ID: toolCall.Id,
+			ID:        toolCall.Id,
 			Name:      toolCall.Function.Name,
 			Arguments: string(data),
 		})
@@ -126,7 +123,7 @@ func (adapter OllamaAdapter) buildToolCallMessage(item ToolCallsItem) (OllamaMes
 		arguments := map[string]any{}
 		err := json.Unmarshal([]byte(call.Arguments), &arguments)
 		if err != nil {
-            return OllamaMessage{}, err
+			return OllamaMessage{}, err
 		}
 
 		calls = append(calls, OllamaToolCall{
@@ -152,8 +149,8 @@ func (adapter OllamaAdapter) buildToolResultMessage(item ToolResultItem) OllamaM
 	}
 
 	message := OllamaMessage{
-		Role:       "tool",
-		Content:    content,
+		Role:    "tool",
+		Content: content,
 	}
 	return message
 }
