@@ -9,9 +9,9 @@ import (
 
 func execute(toolInvocation ToolInvocation) ToolResult {
 	result := ToolResult{
-		InvocationID: toolInvocation.ID,
-		Output:       "",
-		Error:        nil,
+		Invocation: toolInvocation,
+		Output:     "",
+		Error:      nil,
 	}
 
 	if toolInvocation.Name != "shell" {

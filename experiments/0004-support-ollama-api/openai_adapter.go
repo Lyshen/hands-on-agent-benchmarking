@@ -145,7 +145,7 @@ func (adapter OpenAIAdapter) buildToolResultMessage(item ToolResultItem) OpenAIM
 	message := OpenAIMessage{
 		Role:       "tool",
 		Content:    content,
-		ToolCallID: item.Result.InvocationID,
+		ToolCallID: item.Result.Invocation.ID,
 	}
 	return message
 }

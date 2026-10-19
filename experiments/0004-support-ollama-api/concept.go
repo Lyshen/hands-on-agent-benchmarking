@@ -60,7 +60,7 @@ type ToolInvocation struct {
 }
 
 type ToolResult struct {
-	InvocationID string
-	Output       string
-	Error        error
+	Invocation ToolInvocation
+	Output     string
+	Error      error
 }

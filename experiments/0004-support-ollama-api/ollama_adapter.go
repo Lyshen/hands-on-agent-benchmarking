@@ -127,6 +127,7 @@ func (adapter OllamaAdapter) buildToolCallMessage(item ToolCallsItem) (OllamaMes
 		}
 
 		calls = append(calls, OllamaToolCall{
+			Id: call.ID,
 			Function: OllamaToolCallSchema{
 				Name:      call.Name,
 				Arguments: arguments,
@@ -149,8 +150,9 @@ func (adapter OllamaAdapter) buildToolResultMessage(item ToolResultItem) OllamaM
 	}
 
 	message := OllamaMessage{
-		Role:    "tool",
-		Content: content,
+		Role:     "tool",
+		Content:  content,
+		ToolName: item.Result.Invocation.Name,
 	}
 	return message
 }

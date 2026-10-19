@@ -11,6 +11,7 @@ type OllamaChatRequest struct {
 type OllamaMessage struct {
 	Role      string           `json:"role"`
 	Content   string           `json:"content"`
+	ToolName  string           `json:"tool_name,omitempty"`
 	ToolCalls []OllamaToolCall `json:"tool_calls,omitempty"`
 }
 
