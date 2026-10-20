@@ -8,7 +8,7 @@ type Provider interface {
 	Generate(state *Context) (TranscriptItem, error)
 }
 
-func NewProvider(conf *Config) (Provider, error) {
+func NewProvider(conf *LLMProviderConfig) (Provider, error) {
 	switch conf.Protocol {
 	case "openai":
 		provider := &OpenAIProvider{}

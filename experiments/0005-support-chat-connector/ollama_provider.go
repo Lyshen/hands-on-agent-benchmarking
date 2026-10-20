@@ -9,7 +9,7 @@ import (
 )
 
 type OllamaProvider struct {
-	Conf    *Config
+	Conf    *LLMProviderConfig
 	Client  *http.Client
 	Adapter OllamaAdapter
 }
@@ -28,7 +28,7 @@ func (provider OllamaProvider) Generate(state *Context) (TranscriptItem, error) 
 	return provider.Adapter.buildTranscriptItem(resp)
 }
 
-func (provider *OllamaProvider) Init(conf *Config) {
+func (provider *OllamaProvider) Init(conf *LLMProviderConfig) {
 	provider.Conf = conf
 	provider.Client = &http.Client{}
 	provider.Adapter = OllamaAdapter{}

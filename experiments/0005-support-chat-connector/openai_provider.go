@@ -9,7 +9,7 @@ import (
 )
 
 type OpenAIProvider struct {
-	Conf    *Config
+	Conf    *LLMProviderConfig
 	Client  *http.Client
 	Adapter OpenAIAdapter
 }
@@ -28,7 +28,7 @@ func (provider OpenAIProvider) Generate(state *Context) (TranscriptItem, error) 
 	return provider.Adapter.buildTranscriptItem(resp)
 }
 
-func (provider *OpenAIProvider) Init(conf *Config) {
+func (provider *OpenAIProvider) Init(conf *LLMProviderConfig) {
 	provider.Conf = conf
 	provider.Client = &http.Client{}
 	provider.Adapter = OpenAIAdapter{}

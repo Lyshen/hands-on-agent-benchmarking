@@ -57,13 +57,13 @@ func main() {
 		return
 	}
 
-	provider, err := NewProvider(&conf)
+	provider, err := NewProvider(&conf.llmProviderConfig)
 	if err != nil {
 		fmt.Println("fail to init provider: ", err)
 		return
 	}
 	state := Context{}
-	state.Init(conf.Model)
+	state.Init(conf.llmProviderConfig.Model)
 
 	reader := bufio.NewReader(os.Stdin)
 
