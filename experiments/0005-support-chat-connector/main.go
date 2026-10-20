@@ -1,0 +1,88 @@
+package main
+
+import (
+	"bufio"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+)
+
+func runTurn(state *Context, provider Provider) (AssistantItem, error) {
+	for {
+		item, err := provider.Generate(state)
+		if err != nil {
+			return AssistantItem{}, err
+		}
+
+		switch value := item.(type) {
+		case AssistantItem:
+			state.Add(value)
+			return value, nil
+
+		case ToolCallsItem:
+			state.Add(value)
+			for _, toolInvocation := range value.Calls {
+				toolResult := execute(toolInvocation)
+				state.Add(ToolResultItem{Result: toolResult})
+			}
+		}
+	}
+}
+
+func readUserMessage(reader *bufio.Reader) (UserItem, error) {
+
+	userMsg, err := reader.ReadString('\n')
+	eof := errors.Is(err, io.EOF)
+
+	if err != nil && !eof {
+		return UserItem{}, err
+	}
+
+	if eof && len(userMsg) == 0 {
+		return UserItem{}, errors.New("stdin is end")
+	}
+
+	userMsg = strings.TrimSuffix(userMsg, "\n")
+	userMsg = strings.TrimSuffix(userMsg, "\r")
+
+	return UserItem{Content: userMsg}, nil
+}
+
+func main() {
+	conf, err := loadConfig("conf/config.local.json")
+	if err != nil {
+		fmt.Println("fail to load config: ", err)
+		return
+	}
+
+	provider, err := NewProvider(&conf)
+	if err != nil {
+		fmt.Println("fail to init provider: ", err)
+		return
+	}
+	state := Context{}
+	state.Init(conf.Model)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("\n\nYou: ")
+
+		userItem, err := readUserMessage(reader)
+		if err != nil {
+			fmt.Println("fail to read user message: ", err)
+			return
+		}
+
+		state.Add(userItem)
+
+		assistantItem, err := runTurn(&state, provider)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("Assistant: ", assistantItem.Content)
+		}
+	}
+}
