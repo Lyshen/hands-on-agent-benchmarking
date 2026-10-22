@@ -2,18 +2,27 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	larkevent "github.com/larksuite/oapi-sdk-go/v3/event/dispatcher"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	larkws "github.com/larksuite/oapi-sdk-go/v3/ws"
 )
 
-type LarkConnector struct {
-	wsClient *larkws.Client
+type InMessage struct {
+	ChatId  string
+	Content string
 }
 
-func handleLarkMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
-	fmt.Println("received lark message event")
+type LarkInMessage struct {
+	Text string `json:"text"`
+}
+
+type LarkConnector struct {
+	InMessages chan InMessage
+	wsClient   *larkws.Client
+}
+
+func (connector *LarkConnector) handleLarkMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
 	if event == nil ||
 		event.Event == nil ||
 		event.Event.Message == nil {
@@ -25,15 +34,26 @@ func handleLarkMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) er
 		return nil
 	}
 
-	fmt.Println("chatID:", *message.ChatId)
-	fmt.Println("content:", *message.Content)
+	var data LarkInMessage
+	err := json.Unmarshal([]byte(*message.Content), &data)
+	if err != nil {
+		return err
+	}
+
+	inMessage := InMessage{
+		ChatId:  *message.ChatId,
+		Content: data.Text,
+	}
+	connector.InMessages <- inMessage
 
 	return nil
 }
 
 func NewLarkConnector(conf LarkConnectorConfig) LarkConnector {
-	handler := larkevent.NewEventDispatcher("", "").OnP2MessageReceiveV1(handleLarkMessage)
-	connector := LarkConnector{}
+	connector := LarkConnector{
+		InMessages: make(chan InMessage, 10),
+	}
+	handler := larkevent.NewEventDispatcher("", "").OnP2MessageReceiveV1(connector.handleLarkMessage)
 	connector.wsClient = larkws.NewClient(conf.AppID, conf.AppSecret, larkws.WithEventHandler(handler))
 
 	return connector

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -29,6 +28,12 @@ func runTurn(state *Context, provider Provider) (AssistantItem, error) {
 				state.Add(ToolResultItem{Result: toolResult})
 			}
 		}
+	}
+}
+
+func readInMessage(message InMessage) UserItem {
+	return UserItem{
+		Content: message.Content,
 	}
 }
 
@@ -61,7 +66,6 @@ func main() {
 	connector := NewLarkConnector(conf.LarkConnectorConfig)
 	fmt.Println("starting lark connector...")
 
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -70,7 +74,7 @@ func main() {
 			fmt.Println("start connector failed:", err)
 			return
 		}
-    }
+	}()
 
 	provider, err := NewProvider(&conf.LLMProviderConfig)
 	if err != nil {
@@ -83,21 +87,30 @@ func main() {
 	//reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Print("\n\nYou: ")
+		select {
+		case inMessage := <-connector.InMessages:
+			fmt.Print("\n\nYou: ", inMessage.Content)
+			userItem := readInMessage(inMessage)
 
-		userItem, err := readUserMessage(reader)
-		if err != nil {
-			fmt.Println("fail to read user message: ", err)
+			/*
+				userItem, err := readUserMessage(reader)
+
+				if err != nil {
+					fmt.Println("fail to read user message: ", err)
+					return
+				}*/
+
+			state.Add(userItem)
+
+			assistantItem, err := runTurn(&state, provider)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println("Assistant: ", assistantItem.Content)
+			}
+		case <-ctx.Done():
+			fmt.Println("context is cancel")
 			return
-		}
-
-		state.Add(userItem)
-
-		assistantItem, err := runTurn(&state, provider)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("Assistant: ", assistantItem.Content)
 		}
 	}
 }
