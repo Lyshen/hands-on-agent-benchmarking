@@ -31,6 +31,15 @@ func runTurn(state *Context, provider Provider) (AssistantItem, error) {
 	}
 }
 
+func sendOutMessage(connector LarkConnector, chatId string, item AssistantItem) {
+	connector.OutMessages <- LarkMessage{
+		ChatId: chatId,
+		TextMessage: TextMessage{
+			Text: item.Content,
+		},
+	}
+}
+
 func readInMessage(message LarkMessage) UserItem {
 	return UserItem{
 		Content: message.TextMessage.Text,
@@ -106,6 +115,7 @@ func main() {
 				fmt.Println(err)
 			} else {
 				fmt.Println("Assistant: ", assistantItem.Content)
+				sendOutMessage(connector, inMessage.ChatId, assistantItem)
 			}
 		case <-ctx.Done():
 			fmt.Println("context is cancel")

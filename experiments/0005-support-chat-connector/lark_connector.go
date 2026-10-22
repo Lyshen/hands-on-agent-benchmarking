@@ -41,6 +41,7 @@ func NewLarkConnector(conf LarkConnectorConfig) LarkConnector {
 }
 
 func (connector *LarkConnector) start(ctx context.Context) error {
+	go connector.runSender(ctx)
 	return connector.wsClient.Start(ctx)
 }
 
