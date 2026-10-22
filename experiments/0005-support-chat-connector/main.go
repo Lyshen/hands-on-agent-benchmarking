@@ -31,9 +31,9 @@ func runTurn(state *Context, provider Provider) (AssistantItem, error) {
 	}
 }
 
-func readInMessage(message InMessage) UserItem {
+func readInMessage(message LarkMessage) UserItem {
 	return UserItem{
-		Content: message.Content,
+		Content: message.TextMessage.Text,
 	}
 }
 
@@ -84,12 +84,11 @@ func main() {
 	state := Context{}
 	state.Init(conf.LLMProviderConfig.Model)
 
-	//reader := bufio.NewReader(os.Stdin)
-
 	for {
 		select {
 		case inMessage := <-connector.InMessages:
-			fmt.Print("\n\nYou: ", inMessage.Content)
+			fmt.Print("\n\nYou: ", inMessage.TextMessage.Text)
+			fmt.Println()
 			userItem := readInMessage(inMessage)
 
 			/*
