@@ -6,8 +6,8 @@ import (
 )
 
 type Config struct {
-	larkConfig        LarkConnectorConfig `json:"lark_connector_config"`
-	llmProviderConfig LLMProviderConfig   `json:"llm_provider_config"`
+	LarkConnectorConfig LarkConnectorConfig `json:"lark_connector_config"`
+	LLMProviderConfig   LLMProviderConfig   `json:"llm_provider_config"`
 }
 
 type LarkConnectorConfig struct {

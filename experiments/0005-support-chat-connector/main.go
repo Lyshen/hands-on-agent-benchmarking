@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -57,15 +58,29 @@ func main() {
 		return
 	}
 
-	provider, err := NewProvider(&conf.llmProviderConfig)
+	connector := NewLarkConnector(conf.LarkConnectorConfig)
+	fmt.Println("starting lark connector...")
+
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err := connector.start(ctx); err != nil {
+			fmt.Println("start connector failed:", err)
+			return
+		}
+    }
+
+	provider, err := NewProvider(&conf.LLMProviderConfig)
 	if err != nil {
 		fmt.Println("fail to init provider: ", err)
 		return
 	}
 	state := Context{}
-	state.Init(conf.llmProviderConfig.Model)
+	state.Init(conf.LLMProviderConfig.Model)
 
-	reader := bufio.NewReader(os.Stdin)
+	//reader := bufio.NewReader(os.Stdin)
 
 	for {
 		fmt.Print("\n\nYou: ")
