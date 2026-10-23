@@ -72,6 +72,7 @@ func (connector *LarkConnector) runSender(ctx context.Context) {
 		case message := <-connector.OutMessages:
 			err := connector.sendMessage(ctx, message)
 			if err != nil {
+				fmt.Println("send Lark message failed:", err)
 				continue
 			}
 		case <-ctx.Done():
@@ -92,8 +93,8 @@ func (connector *LarkConnector) handleLarkMessage(ctx context.Context, event *la
 		return nil
 	}
 
-    if message.MessageType == nil || *message.MessageType != "text" {
-        return nil
+	if message.MessageType == nil || *message.MessageType != "text" {
+		return nil
 	}
 
 	var data TextMessage

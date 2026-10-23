@@ -72,19 +72,6 @@ func main() {
 		return
 	}
 
-	connector := NewLarkConnector(conf.LarkConnectorConfig)
-	fmt.Println("starting lark connector...")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() {
-		if err := connector.start(ctx); err != nil {
-			fmt.Println("start connector failed:", err)
-			return
-		}
-	}()
-
 	provider, err := NewProvider(&conf.LLMProviderConfig)
 	if err != nil {
 		fmt.Println("fail to init provider: ", err)
@@ -93,8 +80,22 @@ func main() {
 	state := Context{}
 	state.Init(conf.LLMProviderConfig.Model)
 
+	connectorErr := make(chan error, 1)
+	connector := NewLarkConnector(conf.LarkConnectorConfig)
+	fmt.Println("starting lark connector...")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		connectorErr <- connector.start(ctx)
+	}()
+
 	for {
 		select {
+		case err := <-connectorErr:
+			fmt.Println("start connector failed:", err)
+			return
 		case inMessage := <-connector.InMessages:
 			fmt.Print("\n\nYou: ", inMessage.TextMessage.Text)
 			fmt.Println()
@@ -105,7 +106,7 @@ func main() {
 			assistantItem, err := runTurn(&state, provider)
 			if err != nil {
 				fmt.Println(err)
-				sendOutMessage(connector, inMessage.ChatId, AssistantItem{Content:"Inner error, please try it again."})
+				sendOutMessage(connector, inMessage.ChatId, AssistantItem{Content: "Inner error, please try it again."})
 			} else {
 				fmt.Println("Assistant: ", assistantItem.Content)
 				sendOutMessage(connector, inMessage.ChatId, assistantItem)
