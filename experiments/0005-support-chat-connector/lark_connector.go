@@ -92,6 +92,10 @@ func (connector *LarkConnector) handleLarkMessage(ctx context.Context, event *la
 		return nil
 	}
 
+    if message.MessageType == nil || *message.MessageType != "text" {
+        return nil
+	}
+
 	var data TextMessage
 	err := json.Unmarshal([]byte(*message.Content), &data)
 	if err != nil {
