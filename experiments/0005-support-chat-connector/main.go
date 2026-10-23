@@ -105,6 +105,7 @@ func main() {
 			assistantItem, err := runTurn(&state, provider)
 			if err != nil {
 				fmt.Println(err)
+				sendOutMessage(connector, inMessage.ChatId, AssistantItem{Content:"Inner error, please try it again."})
 			} else {
 				fmt.Println("Assistant: ", assistantItem.Content)
 				sendOutMessage(connector, inMessage.ChatId, assistantItem)
