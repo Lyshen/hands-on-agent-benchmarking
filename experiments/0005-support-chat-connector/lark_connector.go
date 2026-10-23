@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkevent "github.com/larksuite/oapi-sdk-go/v3/event/dispatcher"

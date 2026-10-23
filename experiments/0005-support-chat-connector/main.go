@@ -100,14 +100,6 @@ func main() {
 			fmt.Println()
 			userItem := readInMessage(inMessage)
 
-			/*
-				userItem, err := readUserMessage(reader)
-
-				if err != nil {
-					fmt.Println("fail to read user message: ", err)
-					return
-				}*/
-
 			state.Add(userItem)
 
 			assistantItem, err := runTurn(&state, provider)
