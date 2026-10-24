@@ -81,6 +81,25 @@ ENV PATH="/root/.local/bin:$PATH"
 DOCKERFILE
 fi
 
+# The registry hello-world verifier currently installs curl, uv, pytest, and
+# its CTRF plugin on every trial. Preinstall the verifier toolchain in the
+# reusable image so verification does not depend on apt/PyPI availability.
+if ! grep -Fq 'harbor-preinstalled-verifier' "$TASK_DOCKERFILE"; then
+  cat >> "$TASK_DOCKERFILE" <<'DOCKERFILE'
+
+# harbor-preinstalled-verifier
+RUN /root/.local/bin/uv tool install --python 3.12 \
+      --with pytest-json-ctrf==0.3.5 \
+      pytest==8.4.1
+DOCKERFILE
+fi
+
+TASK_TEST_SCRIPT="$HARBOR_TASK_DIR/tests/test.sh"
+if ! grep -Fq 'harbor-preinstalled-verifier' "$TASK_TEST_SCRIPT"; then
+  perl -0pi -e 's|^#!/bin/bash\n.*?^if \[ \$\? -eq 0 \]; then\n.*?^fi\n|#!/bin/bash\n\n# harbor-preinstalled-verifier\nset -e\n\npytest --ctrf /logs/verifier/ctrf.json /tests/test_state.py -rA\necho 1 > /logs/verifier/reward.txt\n|ms' "$TASK_TEST_SCRIPT"
+fi
+grep -Fq 'harbor-preinstalled-verifier' "$TASK_TEST_SCRIPT" || die "failed to make verifier offline"
+
 # Harbor's v0.24.0 adapter otherwise reinstalls the agent even when the image
 # already contains it. Make setup a no-op when the preinstalled CLI exists.
 printf 'Building the reusable hello-world Docker image with mini-swe-agent...\n'
