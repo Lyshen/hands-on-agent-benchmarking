@@ -7,11 +7,12 @@ import (
 
 func main() {
 	mode := flag.String("mode", "cli", "Run mode")
+	task := flag.String("task", "", "Task instruction")
     flag.Parse()
 
 	switch *mode {
     case "cli":
-		runCli()
+		runCli(*task)
 
     case "lark":
 		runLark()
