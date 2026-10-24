@@ -10,11 +10,20 @@ HARBOR_MODEL="${HARBOR_MODEL:-openai/gpt-4o-mini}"
 HARBOR_JOBS_DIR="${HARBOR_JOBS_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/jobs}"
 HARBOR_AGENT_TIMEOUT_MULTIPLIER="${HARBOR_AGENT_TIMEOUT_MULTIPLIER:-5}"
 HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER="${HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER:-20}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
+GO_AGENT_BINARY="${GO_AGENT_BINARY:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/agents/go-agent}"
 
 # mini-swe-agent requires provider/model form. Allow a bare model id for an
 # OpenAI-compatible endpoint, but always pass canonical form to Harbor.
 if [[ "$HARBOR_MODEL" != */* ]]; then
   HARBOR_MODEL="openai/${HARBOR_MODEL}"
+fi
+
+if [[ "$HARBOR_AGENT" == "go-agent" ]]; then
+  "$SCRIPT_DIR/deploy.sh"
+  export GO_AGENT_BINARY
+  HARBOR_AGENT="benchmarks.harbor.go_agent:GoAgent"
 fi
 
 die() {
@@ -39,6 +48,7 @@ if [[ ! -x "$HARBOR_BIN" || ! -f "$HARBOR_TASK_DIR/task.toml" ]]; then
 fi
 [[ -x "$HARBOR_BIN" ]] || die "Harbor installation did not complete"
 [[ -f "$HARBOR_TASK_DIR/task.toml" ]] || die "hello-world task preparation did not complete"
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 if [[ -z "${PROXY_API_KEY:-}" && -z "${OPENAI_API_KEY:-}" ]]; then
   if [[ ! -t 0 ]]; then
@@ -74,6 +84,22 @@ if [[ -n "${PROXY_API_KEY:-}" ]]; then
     --agent-env "OPENAI_API_KEY=${PROXY_API_KEY}"
     --agent-env "OPENAI_BASE_URL=${PROXY_BASE_URL}"
   )
+fi
+
+if [[ "$HARBOR_AGENT" == "benchmarks.harbor.go_agent:GoAgent" ]]; then
+  [[ -n "${OPENAI_API_KEY:-}" || -n "${PROXY_API_KEY:-}" ]] || \
+    die "set OPENAI_API_KEY or PROXY_API_KEY for go-agent"
+  [[ -n "${OPENAI_URL:-}" || -n "${PROXY_BASE_URL:-}" ]] || \
+    die "set OPENAI_URL or PROXY_BASE_URL for go-agent"
+  if [[ -z "${PROXY_API_KEY:-}" && -n "${OPENAI_API_KEY:-}" ]]; then
+    EXTRA_AUTH_ARGS+=(--agent-env "OPENAI_API_KEY=${OPENAI_API_KEY}")
+  fi
+  if [[ -z "${OPENAI_URL:-}" ]]; then
+    OPENAI_URL="${PROXY_BASE_URL%/}/chat/completions"
+  fi
+  export OPENAI_URL
+  EXTRA_AUTH_ARGS+=(--agent-env "OPENAI_URL=${OPENAI_URL}")
+  EXTRA_AUTH_ARGS+=(--agent-env "OPENAI_MODEL=${HARBOR_MODEL#*/}")
 fi
 
 if ((${#EXTRA_AUTH_ARGS[@]})); then
