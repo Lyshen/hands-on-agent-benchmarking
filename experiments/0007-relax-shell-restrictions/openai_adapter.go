@@ -83,9 +83,10 @@ func (adapter OpenAIAdapter) buildRequest(context Context) (OpenAIChatRequest, e
 	}
 
 	chatReq := OpenAIChatRequest{
-		Model:    context.Model,
-		Messages: openAIMessages,
-		Tools:    openAITools,
+		Model:           context.Model,
+		Messages:        openAIMessages,
+		Tools:           openAITools,
+		ReasoningEffort: "none",
 	}
 
 	return chatReq, nil
@@ -130,6 +131,7 @@ func (adapter OpenAIAdapter) buildToolCallMessage(item ToolCallsItem) OpenAIMess
 
 	message := OpenAIMessage{
 		Role:      "assistant",
+		Content: "",
 		ToolCalls: calls,
 	}
 

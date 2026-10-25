@@ -24,7 +24,17 @@ func runTurn(state *Context, provider Provider) (AssistantItem, error) {
 		case ToolCallsItem:
 			state.Add(value)
 			for _, toolInvocation := range value.Calls {
+				fmt.Printf(
+					"ToolCall: name=%s arguments=%s\n",
+					toolInvocation.Name,
+					toolInvocation.Arguments,
+				)
 				toolResult := execute(toolInvocation)
+				fmt.Printf(
+					"ToolResult: output=%q error=%v\n",
+					toolResult.Output,
+					toolResult.Error,
+				)
 				state.Add(ToolResultItem{Result: toolResult})
 			}
 		}

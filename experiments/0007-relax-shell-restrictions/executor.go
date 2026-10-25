@@ -26,7 +26,7 @@ func execute(toolInvocation ToolInvocation) ToolResult {
 		return result
 	}
 
-	cmd := exec.Command("bash", "-c", shellCommand.Command)
+	cmd := exec.Command("bash", "-o", "pipefail", "-c", shellCommand.Command)
 	output, err := cmd.Output()
 
 	var exitErr *exec.ExitError

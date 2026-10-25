@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -59,7 +59,12 @@ func (provider OpenAIProvider) send(chatReq OpenAIChatRequest) (OpenAIChatRespon
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return chatResp, errors.New("fail to get response " + resp.Status)
+		respBytes, _ := io.ReadAll(resp.Body)
+		return chatResp, fmt.Errorf(
+			"request failed: %s: %s",
+			resp.Status,
+			string(respBytes),
+		)
 	}
 
 	respBytes, err := io.ReadAll(resp.Body)

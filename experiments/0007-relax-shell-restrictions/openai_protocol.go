@@ -4,11 +4,12 @@ type OpenAIChatRequest struct {
 	Model    string          `json:"model"`
 	Messages []OpenAIMessage `json:"messages"`
 	Tools    []OpenAITool    `json:"tools"`
+	ReasoningEffort string          `json:"reasoning_effort,omitempty"`
 }
 
 type OpenAIMessage struct {
 	Role       string           `json:"role"`
-	Content    string           `json:"content,omitempty"`
+	Content    string           `json:"content"`
 	ToolCalls  []OpenAIToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string           `json:"tool_call_id,omitempty"`
 }
