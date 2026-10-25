@@ -13,6 +13,30 @@ HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER="${HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER:-
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 GO_AGENT_BINARY="${GO_AGENT_BINARY:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/agents/go-agent}"
+GO_AGENT_SOURCE_DIR="${GO_AGENT_SOURCE_DIR:-experiments/0006-support-harbo-evaluation}"
+
+# These options belong to this wrapper and must not be forwarded to Harbor.
+# All remaining arguments are passed through unchanged.
+HARBOR_RUN_ARGS=()
+while (($#)); do
+  case "$1" in
+    --harness-dir)
+      (($# >= 2)) || { printf 'error: --harness-dir requires a path\n' >&2; exit 1; }
+      GO_AGENT_SOURCE_DIR="$2"
+      shift 2
+      ;;
+    --harness-dir=*)
+      GO_AGENT_SOURCE_DIR="${1#*=}"
+      [[ -n "$GO_AGENT_SOURCE_DIR" ]] || { printf 'error: --harness-dir requires a path\n' >&2; exit 1; }
+      shift
+      ;;
+    *)
+      HARBOR_RUN_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+export GO_AGENT_SOURCE_DIR
 
 # mini-swe-agent requires provider/model form. Allow a bare model id for an
 # OpenAI-compatible endpoint, but always pass canonical form to Harbor.
@@ -102,23 +126,19 @@ if [[ "$HARBOR_AGENT" == "benchmarks.harbor.go_agent:GoAgent" ]]; then
   EXTRA_AUTH_ARGS+=(--agent-env "OPENAI_MODEL=${HARBOR_MODEL#*/}")
 fi
 
+HARBOR_COMMAND=(
+  run
+  --path "$HARBOR_TASK_DIR"
+  --agent "$HARBOR_AGENT"
+  --model "$HARBOR_MODEL"
+  --jobs-dir "$HARBOR_JOBS_DIR"
+  --agent-timeout-multiplier "$HARBOR_AGENT_TIMEOUT_MULTIPLIER"
+  --agent-setup-timeout-multiplier "$HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER"
+)
 if ((${#EXTRA_AUTH_ARGS[@]})); then
-  exec "$HARBOR_BIN" run \
-    --path "$HARBOR_TASK_DIR" \
-    --agent "$HARBOR_AGENT" \
-    --model "$HARBOR_MODEL" \
-    --jobs-dir "$HARBOR_JOBS_DIR" \
-    --agent-timeout-multiplier "$HARBOR_AGENT_TIMEOUT_MULTIPLIER" \
-    --agent-setup-timeout-multiplier "$HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER" \
-    "${EXTRA_AUTH_ARGS[@]}" \
-    "$@"
+  HARBOR_COMMAND+=("${EXTRA_AUTH_ARGS[@]}")
 fi
-
-exec "$HARBOR_BIN" run \
-  --path "$HARBOR_TASK_DIR" \
-  --agent "$HARBOR_AGENT" \
-  --model "$HARBOR_MODEL" \
-  --jobs-dir "$HARBOR_JOBS_DIR" \
-  --agent-timeout-multiplier "$HARBOR_AGENT_TIMEOUT_MULTIPLIER" \
-  --agent-setup-timeout-multiplier "$HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER" \
-  "$@"
+if ((${#HARBOR_RUN_ARGS[@]})); then
+  HARBOR_COMMAND+=("${HARBOR_RUN_ARGS[@]}")
+fi
+exec "$HARBOR_BIN" "${HARBOR_COMMAND[@]}"
