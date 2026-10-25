@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"os/exec"
-	"strings"
 )
 
 func execute(toolInvocation ToolInvocation) ToolResult {
@@ -27,20 +26,7 @@ func execute(toolInvocation ToolInvocation) ToolResult {
 		return result
 	}
 
-	fields := strings.Fields(shellCommand.Command)
-	if len(fields) < 1 {
-		result.Error = errors.New("ToolCall Error: shell command is empty. Please Check.")
-		return result
-	}
-
-	name := fields[0]
-	args := fields[1:]
-	if name != "ls" {
-		result.Error = errors.New("ToolCall Error: command is not in approval list. Only ls is allowed.")
-		return result
-	}
-
-	cmd := exec.Command(name, args...)
+	cmd := exec.Command("bash", "-c", shellCommand.Command)
 	output, err := cmd.Output()
 
 	var exitErr *exec.ExitError
