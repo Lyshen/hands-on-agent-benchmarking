@@ -97,7 +97,7 @@ fi
 CONDA_BASE="$(conda info --base)"
 CONDA_ENV_DIR="${CONDA_ENV_DIR:-${CONDA_BASE}/envs/${HARBOR_ENV_NAME}}"
 HARBOR_BIN="${CONDA_ENV_DIR}/bin/harbor"
-if [[ ! -x "$HARBOR_BIN" || ! -f "$HARBOR_TASK_DIR/task.toml" || ! -d "$HARBOR_BENCHMARK_PATH" || ( "$HARBOR_BENCHMARK" == "terminal-bench" && "$HARBOR_AGENT" == "mini-swe-agent" && ! -e "$HARBOR_MINI_RUNTIME_DIR/bin/mini-swe-agent" ) ]]; then
+if [[ ! -x "$HARBOR_BIN" || ! -f "$HARBOR_TASK_DIR/task.toml" || ! -d "$HARBOR_BENCHMARK_PATH" || ( "$HARBOR_BENCHMARK" == "terminal-bench" && "$HARBOR_AGENT" == "mini-swe-agent" && ( ! -e "$HARBOR_MINI_RUNTIME_DIR/bin/mini-swe-agent" || ! -x "$HARBOR_MINI_RUNTIME_DIR/python/bin/python3.12" ) ) ]]; then
   printf 'Harbor is not installed yet; preparing its isolated environment...\n'
   SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
   "$SCRIPT_DIR/setup.sh"
@@ -175,8 +175,9 @@ if [[ "$HARBOR_BENCHMARK" == "terminal-bench" || "$HARBOR_BENCHMARK" == "termina
   [[ -e "$HARBOR_MINI_RUNTIME_DIR/bin/mini-swe-agent" ]] || die "shared mini-swe runtime is missing; run setup.sh first"
   HARBOR_MOUNTS_JSON="[{\"type\":\"bind\",\"source\":\"$HARBOR_MINI_RUNTIME_DIR\",\"target\":\"/root/.local\",\"read_only\":true}]"
   HARBOR_COMMAND+=(--mounts-json "$HARBOR_MOUNTS_JSON")
-  HARBOR_COMMAND+=(--agent-env "PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+  HARBOR_COMMAND+=(--agent-env "PATH=/root/.local/python/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
   HARBOR_COMMAND+=(--agent-env "PYTHONPATH=/root/.local/lib/python3.12/site-packages")
+  HARBOR_COMMAND+=(--agent-env "PYTHONHOME=/root/.local/python")
 fi
 if [[ -n "$HARBOR_TASK_FILTER" ]]; then
   HARBOR_COMMAND+=(--include-task-name "$HARBOR_TASK_FILTER")
