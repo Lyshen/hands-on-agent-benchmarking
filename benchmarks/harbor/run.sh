@@ -14,12 +14,36 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 GO_AGENT_BINARY="${GO_AGENT_BINARY:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/agents/go-agent}"
 GO_AGENT_SOURCE_DIR="${GO_AGENT_SOURCE_DIR:-experiments/0006-support-harbo-evaluation}"
+HARBOR_BENCHMARK="${HARBOR_BENCHMARK:-hello-world}"
+HARBOR_DATASET="${HARBOR_DATASET:-terminal-bench/terminal-bench@4.0.0}"
+HARBOR_DATASET_DIR="${HARBOR_DATASET_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/datasets/terminal-bench}"
+HARBOR_TASK_FILTER="${HARBOR_TASK_FILTER:-}"
 
 # These options belong to this wrapper and must not be forwarded to Harbor.
 # All remaining arguments are passed through unchanged.
 HARBOR_RUN_ARGS=()
 while (($#)); do
   case "$1" in
+    --benchmark)
+      (($# >= 2)) || { printf 'error: --benchmark requires a name\n' >&2; exit 1; }
+      HARBOR_BENCHMARK="$2"
+      shift 2
+      ;;
+    --benchmark=*)
+      HARBOR_BENCHMARK="${1#*=}"
+      [[ -n "$HARBOR_BENCHMARK" ]] || { printf 'error: --benchmark requires a name\n' >&2; exit 1; }
+      shift
+      ;;
+    --task-filter)
+      (($# >= 2)) || { printf 'error: --task-filter requires a glob pattern\n' >&2; exit 1; }
+      HARBOR_TASK_FILTER="$2"
+      shift 2
+      ;;
+    --task-filter=*)
+      HARBOR_TASK_FILTER="${1#*=}"
+      [[ -n "$HARBOR_TASK_FILTER" ]] || { printf 'error: --task-filter requires a glob pattern\n' >&2; exit 1; }
+      shift
+      ;;
     --harness-dir)
       (($# >= 2)) || { printf 'error: --harness-dir requires a path\n' >&2; exit 1; }
       GO_AGENT_SOURCE_DIR="$2"
@@ -37,6 +61,13 @@ while (($#)); do
   esac
 done
 export GO_AGENT_SOURCE_DIR
+
+if [[ "$HARBOR_BENCHMARK" == "terminal-bench" || "$HARBOR_BENCHMARK" == "terminal-bench/terminal-bench" ]]; then
+  HARBOR_BENCHMARK_PATH="$HARBOR_DATASET_DIR/terminal-bench"
+  export HARBOR_DATASET
+else
+  HARBOR_BENCHMARK_PATH="$HARBOR_TASK_DIR"
+fi
 
 # mini-swe-agent requires provider/model form. Allow a bare model id for an
 # OpenAI-compatible endpoint, but always pass canonical form to Harbor.
@@ -65,13 +96,17 @@ fi
 CONDA_BASE="$(conda info --base)"
 CONDA_ENV_DIR="${CONDA_ENV_DIR:-${CONDA_BASE}/envs/${HARBOR_ENV_NAME}}"
 HARBOR_BIN="${CONDA_ENV_DIR}/bin/harbor"
-if [[ ! -x "$HARBOR_BIN" || ! -f "$HARBOR_TASK_DIR/task.toml" ]]; then
+if [[ ! -x "$HARBOR_BIN" || ! -f "$HARBOR_TASK_DIR/task.toml" || ! -d "$HARBOR_BENCHMARK_PATH" ]]; then
   printf 'Harbor is not installed yet; preparing its isolated environment...\n'
   SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
   "$SCRIPT_DIR/setup.sh"
 fi
 [[ -x "$HARBOR_BIN" ]] || die "Harbor installation did not complete"
 [[ -f "$HARBOR_TASK_DIR/task.toml" ]] || die "hello-world task preparation did not complete"
+if [[ ! -d "$HARBOR_BENCHMARK_PATH" ]]; then
+  HARBOR_DATASET="$HARBOR_DATASET" "$SCRIPT_DIR/setup.sh"
+fi
+[[ -d "$HARBOR_BENCHMARK_PATH" ]] || die "benchmark path does not exist: $HARBOR_BENCHMARK_PATH"
 export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 
 if [[ -z "${PROXY_API_KEY:-}" && -z "${OPENAI_API_KEY:-}" ]]; then
@@ -128,13 +163,16 @@ fi
 
 HARBOR_COMMAND=(
   run
-  --path "$HARBOR_TASK_DIR"
+  --path "$HARBOR_BENCHMARK_PATH"
   --agent "$HARBOR_AGENT"
   --model "$HARBOR_MODEL"
   --jobs-dir "$HARBOR_JOBS_DIR"
   --agent-timeout-multiplier "$HARBOR_AGENT_TIMEOUT_MULTIPLIER"
   --agent-setup-timeout-multiplier "$HARBOR_AGENT_SETUP_TIMEOUT_MULTIPLIER"
 )
+if [[ -n "$HARBOR_TASK_FILTER" ]]; then
+  HARBOR_COMMAND+=(--include-task-name "$HARBOR_TASK_FILTER")
+fi
 if ((${#EXTRA_AUTH_ARGS[@]})); then
   HARBOR_COMMAND+=("${EXTRA_AUTH_ARGS[@]}")
 fi

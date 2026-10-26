@@ -7,6 +7,8 @@ set -Eeuo pipefail
 HARBOR_VERSION="${HARBOR_VERSION:-0.24.0}"
 HARBOR_ENV_NAME="${HARBOR_ENV_NAME:-harbor-${HARBOR_VERSION}}"
 HARBOR_TASK_DIR="${HARBOR_TASK_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/tasks/hello-world}"
+HARBOR_DATASET="${HARBOR_DATASET:-}"
+HARBOR_DATASET_DIR="${HARBOR_DATASET_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/datasets/terminal-bench}"
 
 die() {
   printf 'error: %s\n' "$*" >&2
@@ -99,6 +101,26 @@ if ! grep -Fq 'harbor-preinstalled-verifier' "$TASK_TEST_SCRIPT"; then
   perl -0pi -e 's|^#!/bin/bash\n.*?^if \[ \$\? -eq 0 \]; then\n.*?^fi\n|#!/bin/bash\n\n# harbor-preinstalled-verifier\nset -e\n\npytest --ctrf /logs/verifier/ctrf.json /tests/test_state.py -rA\necho 1 > /logs/verifier/reward.txt\n|ms' "$TASK_TEST_SCRIPT"
 fi
 grep -Fq 'harbor-preinstalled-verifier' "$TASK_TEST_SCRIPT" || die "failed to make verifier offline"
+
+# Download the selected benchmark outside the repository. Dataset task images
+# are built by Harbor on demand; the task sources themselves are cached here
+# so later runs do not download the benchmark again.
+if [[ -n "$HARBOR_DATASET" && "$HARBOR_DATASET" == terminal-bench/terminal-bench@* ]]; then
+  DATASET_NAME_DIR="$HARBOR_DATASET_DIR/terminal-bench"
+elif [[ -n "$HARBOR_DATASET" ]]; then
+  DATASET_SLUG="${HARBOR_DATASET%@*}"
+  DATASET_SLUG="${DATASET_SLUG##*/}"
+  DATASET_NAME_DIR="$HARBOR_DATASET_DIR/$DATASET_SLUG"
+fi
+if [[ ! -f "$DATASET_NAME_DIR/dataset.toml" && ! -d "$DATASET_NAME_DIR" ]]; then
+  mkdir -p "$HARBOR_DATASET_DIR"
+  printf 'Downloading Harbor dataset %s...\n' "$HARBOR_DATASET"
+  "$CONDA_ENV_DIR/bin/harbor" datasets download "$HARBOR_DATASET" \
+    --output-dir "$HARBOR_DATASET_DIR" --export
+fi
+if [[ -n "$HARBOR_DATASET" ]]; then
+  [[ -d "$DATASET_NAME_DIR" ]] || die "dataset was not downloaded: $DATASET_NAME_DIR"
+fi
 
 # Harbor's v0.24.0 adapter otherwise reinstalls the agent even when the image
 # already contains it. Make setup a no-op when the preinstalled CLI exists.
