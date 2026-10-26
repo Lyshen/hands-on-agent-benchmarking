@@ -19,6 +19,7 @@ HARBOR_DATASET="${HARBOR_DATASET:-terminal-bench/terminal-bench@4.0.0}"
 HARBOR_DATASET_DIR="${HARBOR_DATASET_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/datasets/terminal-bench}"
 HARBOR_TASK_FILTER="${HARBOR_TASK_FILTER:-}"
 HARBOR_MINI_RUNTIME_DIR="${HARBOR_MINI_RUNTIME_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/runtimes/mini-swe-agent-linux-amd64}"
+HARBOR_CA_BUNDLE="${HARBOR_CA_BUNDLE:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/ca-certificates.crt}"
 
 # These options belong to this wrapper and must not be forwarded to Harbor.
 # All remaining arguments are passed through unchanged.
@@ -97,7 +98,7 @@ fi
 CONDA_BASE="$(conda info --base)"
 CONDA_ENV_DIR="${CONDA_ENV_DIR:-${CONDA_BASE}/envs/${HARBOR_ENV_NAME}}"
 HARBOR_BIN="${CONDA_ENV_DIR}/bin/harbor"
-if [[ ! -x "$HARBOR_BIN" || ! -f "$HARBOR_TASK_DIR/task.toml" || ! -d "$HARBOR_BENCHMARK_PATH" || ( "$HARBOR_BENCHMARK" == "terminal-bench" && "$HARBOR_AGENT" == "mini-swe-agent" && ( ! -e "$HARBOR_MINI_RUNTIME_DIR/bin/mini-swe-agent" || ! -x "$HARBOR_MINI_RUNTIME_DIR/python/bin/python3.12" ) ) ]]; then
+if [[ ! -x "$HARBOR_BIN" || ! -f "$HARBOR_TASK_DIR/task.toml" || ! -d "$HARBOR_BENCHMARK_PATH" || ! -s "$HARBOR_CA_BUNDLE" || ( "$HARBOR_BENCHMARK" == "terminal-bench" && "$HARBOR_AGENT" == "mini-swe-agent" && ( ! -e "$HARBOR_MINI_RUNTIME_DIR/bin/mini-swe-agent" || ! -x "$HARBOR_MINI_RUNTIME_DIR/python/bin/python3.12" ) ) ]]; then
   printf 'Harbor is not installed yet; preparing its isolated environment...\n'
   SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
   "$SCRIPT_DIR/setup.sh"
@@ -178,6 +179,10 @@ if [[ "$HARBOR_BENCHMARK" == "terminal-bench" || "$HARBOR_BENCHMARK" == "termina
   HARBOR_COMMAND+=(--agent-env "PATH=/root/.local/python/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
   HARBOR_COMMAND+=(--agent-env "PYTHONPATH=/root/.local/lib/python3.12/site-packages")
   HARBOR_COMMAND+=(--agent-env "PYTHONHOME=/root/.local/python")
+fi
+if [[ "$HARBOR_AGENT" == "benchmarks.harbor.go_agent:GoAgent" ]]; then
+  [[ -s "$HARBOR_CA_BUNDLE" ]] || die "CA bundle is missing; run setup.sh first"
+  HARBOR_COMMAND+=(--mounts-json "[{\"type\":\"bind\",\"source\":\"$HARBOR_CA_BUNDLE\",\"target\":\"/etc/ssl/certs/ca-certificates.crt\",\"read_only\":true}]")
 fi
 if [[ -n "$HARBOR_TASK_FILTER" ]]; then
   HARBOR_COMMAND+=(--include-task-name "$HARBOR_TASK_FILTER")

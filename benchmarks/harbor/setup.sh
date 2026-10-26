@@ -11,6 +11,7 @@ HARBOR_DATASET="${HARBOR_DATASET:-}"
 HARBOR_DATASET_DIR="${HARBOR_DATASET_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/datasets/terminal-bench}"
 HARBOR_MINI_RUNTIME_DIR="${HARBOR_MINI_RUNTIME_DIR:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/runtimes/mini-swe-agent-linux-amd64}"
 HARBOR_MINI_IMAGE="${HARBOR_MINI_IMAGE:-harbor-terminal-bench-mini-swe-agent-amd64}"
+HARBOR_CA_BUNDLE="${HARBOR_CA_BUNDLE:-${XDG_STATE_HOME:-${HOME}/.local/state}/hands-on-agent-benchmarking/harbor/ca-certificates.crt}"
 
 die() {
   printf 'error: %s\n' "$*" >&2
@@ -154,6 +155,17 @@ docker build --tag harbor-hello-world-mini-swe-agent "$HARBOR_TASK_DIR/environme
 if ! docker image inspect "$HARBOR_MINI_IMAGE" >/dev/null 2>&1; then
   die "AMD64 mini-swe-agent image is missing: $HARBOR_MINI_IMAGE"
 fi
+if [[ ! -s "$HARBOR_CA_BUNDLE" ]]; then
+  printf 'Exporting reusable CA bundle: %s\n' "$HARBOR_CA_BUNDLE"
+  mkdir -p "$(dirname -- "$HARBOR_CA_BUNDLE")"
+  CA_CONTAINER="$(docker create --platform linux/amd64 "$HARBOR_MINI_IMAGE")"
+  cleanup_ca() { docker rm "$CA_CONTAINER" >/dev/null 2>&1 || true; }
+  trap cleanup_ca EXIT
+  docker cp "$CA_CONTAINER:/etc/ssl/certs/ca-certificates.crt" "$HARBOR_CA_BUNDLE"
+  cleanup_ca
+  trap - EXIT
+fi
+[[ -s "$HARBOR_CA_BUNDLE" ]] || die "CA bundle export failed: $HARBOR_CA_BUNDLE"
 if [[ ! -e "$HARBOR_MINI_RUNTIME_DIR/bin/mini-swe-agent" || ! -x "$HARBOR_MINI_RUNTIME_DIR/python/bin/python3.12" ]]; then
   RUNTIME_TMP="$(mktemp -d "${TMPDIR:-/tmp}/harbor-mini-runtime.XXXXXX")"
   RUNTIME_CONTAINER="$(docker create --platform linux/amd64 "$HARBOR_MINI_IMAGE")"
