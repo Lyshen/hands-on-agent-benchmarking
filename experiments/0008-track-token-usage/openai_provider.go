@@ -25,6 +25,9 @@ func (provider OpenAIProvider) Generate(state *Context) (TranscriptItem, error) 
 		return AssistantItem{}, err
 	}
 
+	usage := provider.Adapter.buildTokenUsage(resp)
+	state.AddUsage(usage)
+
 	return provider.Adapter.buildTranscriptItem(resp)
 }
 
@@ -71,6 +74,7 @@ func (provider OpenAIProvider) send(chatReq OpenAIChatRequest) (OpenAIChatRespon
 	if err != nil {
 		return chatResp, err
 	}
+	fmt.Println(string(respBytes))
 	err = json.Unmarshal(respBytes, &chatResp)
 	if err != nil {
 		return chatResp, err

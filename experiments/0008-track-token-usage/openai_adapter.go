@@ -116,6 +116,14 @@ func (adapter OpenAIAdapter) buildTranscriptItem(response OpenAIChatResponse) (T
 	return toolCallsItem, nil
 }
 
+func (adapter OpenAIAdapter) buildTokenUsage(response OpenAIChatResponse) TokenUsage {
+     return TokenUsage {
+         InputToken : response.Usage.PromptTokens,
+         OutputToken : response.Usage.CompletionTokens,
+		 TotalToken : response.Usage.TotalTokens,
+	 }
+}
+
 func (adapter OpenAIAdapter) buildToolCallMessage(item ToolCallsItem) OpenAIMessage {
 	calls := []OpenAIToolCall{}
 	for _, call := range item.Calls {

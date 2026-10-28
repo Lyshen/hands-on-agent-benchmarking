@@ -1,9 +1,17 @@
 package main
+import ("fmt")
+
+type TokenUsage struct {
+    InputToken int
+	OutputToken int
+	TotalToken int
+}
 
 type Context struct {
 	Model      string
 	Transcript []TranscriptItem
 	Tools      []Tool
+	TokenUsage TokenUsage
 }
 
 func (c *Context) Init(model string) {
@@ -29,8 +37,18 @@ func (c *Context) Init(model string) {
 			},
 		},
 	}
+
+	c.TokenUsage = TokenUsage{}
 }
 
 func (c *Context) Add(item TranscriptItem) {
 	c.Transcript = append(c.Transcript, item)
+}
+
+func (c *Context) AddUsage(usage TokenUsage) {
+    c.TokenUsage.InputToken += usage.InputToken
+    c.TokenUsage.OutputToken += usage.OutputToken
+    c.TokenUsage.TotalToken += usage.TotalToken
+
+	fmt.Printf("input:%d output:%d total:%d\n", c.TokenUsage.InputToken, c.TokenUsage.OutputToken, c.TokenUsage.TotalToken)
 }
