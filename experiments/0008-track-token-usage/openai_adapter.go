@@ -117,11 +117,11 @@ func (adapter OpenAIAdapter) buildTranscriptItem(response OpenAIChatResponse) (T
 }
 
 func (adapter OpenAIAdapter) buildTokenUsage(response OpenAIChatResponse) TokenUsage {
-     return TokenUsage {
-         InputToken : response.Usage.PromptTokens,
-         OutputToken : response.Usage.CompletionTokens,
-		 TotalToken : response.Usage.TotalTokens,
-	 }
+	return TokenUsage{
+		InputToken:  response.Usage.PromptTokens,
+		OutputToken: response.Usage.CompletionTokens,
+		TotalToken:  response.Usage.TotalTokens,
+	}
 }
 
 func (adapter OpenAIAdapter) buildToolCallMessage(item ToolCallsItem) OpenAIMessage {
@@ -139,7 +139,7 @@ func (adapter OpenAIAdapter) buildToolCallMessage(item ToolCallsItem) OpenAIMess
 
 	message := OpenAIMessage{
 		Role:      "assistant",
-		Content: "",
+		Content:   "",
 		ToolCalls: calls,
 	}
 

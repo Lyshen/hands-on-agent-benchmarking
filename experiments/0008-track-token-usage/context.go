@@ -1,10 +1,13 @@
 package main
-import ("fmt")
+
+import (
+	"fmt"
+)
 
 type TokenUsage struct {
-    InputToken int
+	InputToken  int
 	OutputToken int
-	TotalToken int
+	TotalToken  int
 }
 
 type Context struct {
@@ -46,9 +49,9 @@ func (c *Context) Add(item TranscriptItem) {
 }
 
 func (c *Context) AddUsage(usage TokenUsage) {
-    c.TokenUsage.InputToken += usage.InputToken
-    c.TokenUsage.OutputToken += usage.OutputToken
-    c.TokenUsage.TotalToken += usage.TotalToken
+	c.TokenUsage.InputToken += usage.InputToken
+	c.TokenUsage.OutputToken += usage.OutputToken
+	c.TokenUsage.TotalToken += usage.TotalToken
 
 	fmt.Printf("input:%d output:%d total:%d\n", c.TokenUsage.InputToken, c.TokenUsage.OutputToken, c.TokenUsage.TotalToken)
 }

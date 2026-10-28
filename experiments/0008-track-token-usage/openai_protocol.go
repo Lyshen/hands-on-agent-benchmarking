@@ -1,9 +1,9 @@
 package main
 
 type OpenAIChatRequest struct {
-	Model    string          `json:"model"`
-	Messages []OpenAIMessage `json:"messages"`
-	Tools    []OpenAITool    `json:"tools"`
+	Model           string          `json:"model"`
+	Messages        []OpenAIMessage `json:"messages"`
+	Tools           []OpenAITool    `json:"tools"`
 	ReasoningEffort string          `json:"reasoning_effort,omitempty"`
 }
 
@@ -37,14 +37,14 @@ type OpenAIFunction struct {
 }
 
 type OpenAIChatUsage struct {
-    PromptTokens int `json:"prompt_tokens"`
-    CompletionTokens int `json:"completion_tokens"`
-	TotalTokens int `json:"total_tokens"`
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
 }
 
 type OpenAIChatResponse struct {
-	Choices []Choice `json:"choices"`
-	Usage OpenAIChatUsage `json:"usage"`
+	Choices []Choice        `json:"choices"`
+	Usage   OpenAIChatUsage `json:"usage"`
 }
 
 type Choice struct {
