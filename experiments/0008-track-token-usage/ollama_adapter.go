@@ -92,6 +92,14 @@ func (adapter OllamaAdapter) buildRequest(context Context) (OllamaChatRequest, e
 	return chatReq, nil
 }
 
+func (adapter OllamaAdapter) buildTokenUsage(response OllamaChatResponse) TokenUsage {
+	return TokenUsage{
+		InputToken:  response.PromptToken,
+		OutputToken: response.EvalToken,
+		TotalToken:  response.PromptToken + response.EvalToken,
+	}
+}
+
 func (adapter OllamaAdapter) buildTranscriptItem(response OllamaChatResponse) (TranscriptItem, error) {
 	if len(response.Message.ToolCalls) == 0 {
 		return AssistantItem{Content: response.Message.Content}, nil

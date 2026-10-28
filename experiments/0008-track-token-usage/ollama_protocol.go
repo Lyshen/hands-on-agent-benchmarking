@@ -37,6 +37,8 @@ type OllamaFunction struct {
 }
 
 type OllamaChatResponse struct {
-	Message OllamaMessage `json:"message"`
-	Done    bool          `json:"done"`
+	Message     OllamaMessage `json:"message"`
+	Done        bool          `json:"done"`
+	PromptToken int           `json:"prompt_eval_count"`
+	EvalToken   int           `json:"eval_count"`
 }
