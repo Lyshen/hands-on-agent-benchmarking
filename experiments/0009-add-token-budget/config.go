@@ -8,6 +8,11 @@ import (
 type Config struct {
 	LarkConnectorConfig LarkConnectorConfig `json:"lark_connector_config"`
 	LLMProviderConfig   LLMProviderConfig   `json:"llm_provider_config"`
+	AgentRunConfig      AgentRunConfig      `json:"agent_run_config"`
+}
+
+type AgentRunConfig struct {
+	TokenBudget *int `json:"token_budget"`
 }
 
 type LarkConnectorConfig struct {

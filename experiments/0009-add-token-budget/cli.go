@@ -47,7 +47,7 @@ func runCli(task string) {
 
 	state.Add(userItem)
 
-    assistantItem, err := runTurn(&state, provider)
+    assistantItem, err := runTurn(&state, provider, nil)
 	
 	if err != nil {
 		fmt.Println(err)
