@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 type TokenUsage struct {
 	InputToken  int
 	OutputToken int
@@ -52,6 +48,4 @@ func (c *Context) AddUsage(usage TokenUsage) {
 	c.TokenUsage.InputToken += usage.InputToken
 	c.TokenUsage.OutputToken += usage.OutputToken
 	c.TokenUsage.TotalToken += usage.TotalToken
-
-	fmt.Printf("input:%d output:%d total:%d\n", c.TokenUsage.InputToken, c.TokenUsage.OutputToken, c.TokenUsage.TotalToken)
 }
