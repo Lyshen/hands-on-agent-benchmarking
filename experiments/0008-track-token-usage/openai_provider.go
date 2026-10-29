@@ -74,7 +74,7 @@ func (provider OpenAIProvider) send(chatReq OpenAIChatRequest) (OpenAIChatRespon
 	if err != nil {
 		return chatResp, err
 	}
-	fmt.Println(string(respBytes))
+
 	err = json.Unmarshal(respBytes, &chatResp)
 	if err != nil {
 		return chatResp, err

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -69,7 +68,7 @@ func (provider OllamaProvider) send(chatReq OllamaChatRequest) (OllamaChatRespon
 	if err != nil {
 		return chatResp, err
 	}
-	fmt.Println(string(respBytes))
+
 	err = json.Unmarshal(respBytes, &chatResp)
 	if err != nil {
 		return chatResp, err
