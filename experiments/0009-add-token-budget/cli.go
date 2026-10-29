@@ -27,6 +27,8 @@ func loadConfigFromEnv() (Config, error) {
 		budget, err := strconv.Atoi(tokenBudgetStr)
 		if err != nil {
 			return Config{}, fmt.Errorf("invalid TOKEN_BUDGET: %w", err)
+		} else if budget < 0 {
+			return Config{}, fmt.Errorf("TOKEN_BUDGET must be non-negative")
 		} else {
 			tokenBudget = &budget
 		}
