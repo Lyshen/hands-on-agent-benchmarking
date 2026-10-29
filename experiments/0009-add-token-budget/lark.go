@@ -12,8 +12,8 @@ import (
 func runTurn(state *Context, provider Provider, tokenBudget *int) (AssistantItem, error) {
 	for {
 		fmt.Println("usage:", state.TokenUsage.TotalToken)
-        if tokenBudget != nil && state.TokenUsage.TotalToken > *tokenBudget {
-            return AssistantItem{}, errors.New("current loop is out of token budget")
+		if tokenBudget != nil && state.TokenUsage.TotalToken > *tokenBudget {
+			return AssistantItem{}, errors.New("current loop is out of token budget")
 		}
 
 		item, err := provider.Generate(state)

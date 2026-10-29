@@ -1,31 +1,50 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 	"os"
+	"strconv"
 )
 
-func loadConfigFromEnv() (LLMProviderConfig, error) {
-    url := os.Getenv("OPENAI_URL")
-    api_key := os.Getenv("OPENAI_API_KEY")
-    model := os.Getenv("OPENAI_MODEL")
+func loadConfigFromEnv() (Config, error) {
+	url := os.Getenv("OPENAI_URL")
+	api_key := os.Getenv("OPENAI_API_KEY")
+	model := os.Getenv("OPENAI_MODEL")
+
+	var tokenBudget *int
+	tokenBudgetStr := os.Getenv("TOKEN_BUDGET")
 
 	if url == "" {
-        return LLMProviderConfig{}, fmt.Errorf("OPENAI_URL is required")
+		return Config{}, fmt.Errorf("OPENAI_URL is required")
 	}
 	if api_key == "" {
-        return LLMProviderConfig{}, fmt.Errorf("OPENAI_API_KEY is required")
+		return Config{}, fmt.Errorf("OPENAI_API_KEY is required")
 	}
 	if model == "" {
-        return LLMProviderConfig{}, fmt.Errorf("OPENAI_MODELL is required")
+		return Config{}, fmt.Errorf("OPENAI_MODELL is required")
+	}
+	if tokenBudgetStr != "" {
+		budget, err := strconv.Atoi(tokenBudgetStr)
+		if err != nil {
+			return Config{}, fmt.Errorf("TOKEN_BUDGET is interger")
+		} else {
+			tokenBudget = &budget
+		}
 	}
 
-	return LLMProviderConfig {
-        URL : url,
-		APIKey : api_key,
-		Model : model,
-		Protocol : "openai",
-	}, nil
+	config := Config{
+		LLMProviderConfig: LLMProviderConfig{
+			URL:      url,
+			APIKey:   api_key,
+			Model:    model,
+			Protocol: "openai",
+		},
+		AgentRunConfig: AgentRunConfig{
+			TokenBudget: tokenBudget,
+		},
+	}
+
+	return config, nil
 }
 
 func runCli(task string) {
@@ -35,20 +54,20 @@ func runCli(task string) {
 		return
 	}
 
-	provider, err := NewProvider(&conf)
+	provider, err := NewProvider(&conf.LLMProviderConfig)
 	if err != nil {
 		fmt.Println("fail to init provider: ", err)
 		return
 	}
 	state := Context{}
-	state.Init(conf.Model)
+	state.Init(conf.LLMProviderConfig.Model)
 
 	userItem := UserItem{Content: task}
 
 	state.Add(userItem)
 
-    assistantItem, err := runTurn(&state, provider, nil)
-	
+	assistantItem, err := runTurn(&state, provider, conf.AgentRunConfig.TokenBudget)
+
 	if err != nil {
 		fmt.Println(err)
 	} else {
