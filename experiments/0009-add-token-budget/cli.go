@@ -21,12 +21,12 @@ func loadConfigFromEnv() (Config, error) {
 		return Config{}, fmt.Errorf("OPENAI_API_KEY is required")
 	}
 	if model == "" {
-		return Config{}, fmt.Errorf("OPENAI_MODELL is required")
+		return Config{}, fmt.Errorf("OPENAI_MODEL is required")
 	}
 	if tokenBudgetStr != "" {
 		budget, err := strconv.Atoi(tokenBudgetStr)
 		if err != nil {
-			return Config{}, fmt.Errorf("TOKEN_BUDGET is interger")
+			return Config{}, fmt.Errorf("invalid TOKEN_BUDGET: %w", err)
 		} else {
 			tokenBudget = &budget
 		}
