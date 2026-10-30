@@ -18,10 +18,10 @@ func runCli(task string) {
 	}
 
 	state := NewContext(conf.LLMProviderConfig.Model)
-	loop := NewLoop(&state, provider, conf.AgentRunConfig.TokenBudget)
+	runner := NewRunner(NewLoop(&state, provider, conf.AgentRunConfig.TokenBudget))
 
 	state.Add(UserItem{Content: task})
-	assistantItem, err := loop.runTurn()
+	assistantItem, err := runner.Run()
 
 	if err != nil {
 		fmt.Println(err)

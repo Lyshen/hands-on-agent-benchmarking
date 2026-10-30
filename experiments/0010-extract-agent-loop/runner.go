@@ -6,16 +6,16 @@ import (
 )
 
 type Loop struct {
-    state *Context
-	provider Provider
+	state       *Context
+	provider    Provider
 	tokenBudget *int
 }
 
 func NewLoop(state *Context, provider Provider, tokenBudget *int) Loop {
-    return Loop {
-        state : state,
-		provider : provider,
-		tokenBudget : tokenBudget,
+	return Loop{
+		state:       state,
+		provider:    provider,
+		tokenBudget: tokenBudget,
 	}
 }
 
@@ -55,14 +55,16 @@ func (loop Loop) runTurn() (AssistantItem, error) {
 	}
 }
 
-
 type Runner struct {
 	mainLoop Loop
 }
 
 func NewRunner(loop Loop) Runner {
-    return Runner {
-		mainLoop : loop,
+	return Runner{
+		mainLoop: loop,
 	}
 }
 
+func (r Runner) Run() (AssistantItem, error) {
+	return r.mainLoop.runTurn()
+}
