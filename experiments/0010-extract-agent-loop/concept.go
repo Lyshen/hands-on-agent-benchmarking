@@ -64,3 +64,14 @@ type ToolResult struct {
 	Output     string
 	Error      error
 }
+
+type TokenUsage struct {
+	InputToken  int
+	OutputToken int
+	TotalToken  int
+}
+
+type ProviderResponse struct {
+	Item  TranscriptItem
+	Usage TokenUsage
+}

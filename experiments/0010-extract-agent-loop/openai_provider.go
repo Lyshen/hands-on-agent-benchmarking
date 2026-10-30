@@ -14,21 +14,26 @@ type OpenAIProvider struct {
 	Adapter OpenAIAdapter
 }
 
-func (provider OpenAIProvider) Generate(state *Context) (TranscriptItem, error) {
+func (provider OpenAIProvider) Generate(state *Context) (ProviderResponse, error) {
 	req, err := provider.Adapter.buildRequest(*state)
 	if err != nil {
-		return AssistantItem{}, err
+		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
 	}
 
 	resp, err := provider.send(req)
 	if err != nil {
-		return AssistantItem{}, err
+		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
 	}
 
-	usage := provider.Adapter.buildTokenUsage(resp)
-	state.AddUsage(usage)
+	item, err := provider.Adapter.buildTranscriptItem(resp)
+	if err != nil {
+		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
+	}
 
-	return provider.Adapter.buildTranscriptItem(resp)
+	return ProviderResponse{
+		Item:  item,
+		Usage: provider.Adapter.buildTokenUsage(resp),
+	}, nil
 }
 
 func (provider *OpenAIProvider) Init(conf *LLMProviderConfig) {

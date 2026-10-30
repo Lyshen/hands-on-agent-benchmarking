@@ -33,12 +33,12 @@ func (loop Loop) runTurn(input UserItem) (AssistantItem, error) {
 			return AssistantItem{}, errors.New("current loop is out of token budget")
 		}
 
-		item, err := loop.provider.Generate(loop.state)
+		resp, err := loop.provider.Generate(loop.state)
 		if err != nil {
 			return AssistantItem{}, err
 		}
 
-		switch value := item.(type) {
+		switch value := resp.Item.(type) {
 		case AssistantItem:
 			loop.state.Add(value)
 			return value, nil

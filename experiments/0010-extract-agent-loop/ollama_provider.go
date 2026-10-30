@@ -14,20 +14,26 @@ type OllamaProvider struct {
 	Adapter OllamaAdapter
 }
 
-func (provider OllamaProvider) Generate(state *Context) (TranscriptItem, error) {
+func (provider OllamaProvider) Generate(state *Context) (ProviderResponse, error) {
 	req, err := provider.Adapter.buildRequest(*state)
 	if err != nil {
-		return AssistantItem{}, err
+		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
 	}
 
 	resp, err := provider.send(req)
 	if err != nil {
-		return AssistantItem{}, err
+		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
 	}
 
-	state.AddUsage(provider.Adapter.buildTokenUsage(resp))
+	item, err := provider.Adapter.buildTranscriptItem(resp)
+	if err != nil {
+		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
+	}
 
-	return provider.Adapter.buildTranscriptItem(resp)
+	return ProviderResponse{
+		Item:  item,
+		Usage: provider.Adapter.buildTokenUsage(resp),
+	}, nil
 }
 
 func (provider *OllamaProvider) Init(conf *LLMProviderConfig) {

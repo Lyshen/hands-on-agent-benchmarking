@@ -1,11 +1,5 @@
 package main
 
-type TokenUsage struct {
-	InputToken  int
-	OutputToken int
-	TotalToken  int
-}
-
 type Context struct {
 	Model      string
 	Transcript []TranscriptItem
