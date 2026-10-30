@@ -25,7 +25,7 @@ func NewLoop(state Context, provider Provider, tokenBudget *int) Loop {
 	}
 }
 
-func (loop Loop) runTurn(input UserItem) (AssistantItem, error) {
+func (loop *Loop) runTurn(input UserItem) (AssistantItem, error) {
 	loop.state.Add(input)
 
 	for {
@@ -37,6 +37,8 @@ func (loop Loop) runTurn(input UserItem) (AssistantItem, error) {
 		if err != nil {
 			return AssistantItem{}, err
 		}
+
+		loop.state.AddUsage(resp.Usage)
 
 		switch value := resp.Item.(type) {
 		case AssistantItem:
@@ -77,6 +79,6 @@ func NewRunner(conf LoopConfig) Runner {
 	}
 }
 
-func (r Runner) Run(input UserItem) (AssistantItem, error) {
+func (r *Runner) Run(input UserItem) (AssistantItem, error) {
 	return r.mainLoop.runTurn(input)
 }
