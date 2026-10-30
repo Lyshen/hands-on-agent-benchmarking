@@ -56,8 +56,7 @@ func runLark() {
 			return
 
 		case inMessage := <-connector.InMessages:
-			fmt.Print("\n\nYou: ", inMessage.TextMessage.Text)
-			fmt.Println()
+			fmt.Printf("You:%s\n", inMessage.TextMessage.Text)
 
 			userItem := readInMessage(inMessage)
 			assistantItem, err := runner.Run(userItem)
