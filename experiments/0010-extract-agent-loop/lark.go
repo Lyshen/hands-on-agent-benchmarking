@@ -5,21 +5,6 @@ import (
 	"fmt"
 )
 
-func sendOutMessage(connector LarkConnector, chatId string, item AssistantItem) {
-	connector.OutMessages <- LarkMessage{
-		ChatId: chatId,
-		TextMessage: TextMessage{
-			Text: item.Content,
-		},
-	}
-}
-
-func readInMessage(message LarkMessage) UserItem {
-	return UserItem{
-		Content: message.TextMessage.Text,
-	}
-}
-
 func runLark() {
 	conf, err := loadConfig("conf/config.local.json")
 	if err != nil {
@@ -58,15 +43,15 @@ func runLark() {
 		case inMessage := <-connector.InMessages:
 			fmt.Printf("You:%s\n", inMessage.TextMessage.Text)
 
-			userItem := readInMessage(inMessage)
+			userItem := toHarnessInput(inMessage)
 			assistantItem, err := runner.Run(userItem)
 
 			if err != nil {
 				fmt.Println(err)
-				sendOutMessage(connector, inMessage.ChatId, AssistantItem{Content: "Inner error, please try it again."})
+				connector.OutMessages <- toLarkMessage(inMessage.ChatId, AssistantItem{Content: "Inner error, please try it again."})
 			} else {
 				fmt.Println("Assistant: ", assistantItem.Content)
-				sendOutMessage(connector, inMessage.ChatId, assistantItem)
+				connector.OutMessages <- toLarkMessage(inMessage.ChatId, assistantItem)
 			}
 
 		case <-ctx.Done():
