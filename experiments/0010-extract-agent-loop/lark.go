@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"errors"
 	"fmt"
-	"io"
-	"strings"
 )
 
 func sendOutMessage(connector LarkConnector, chatId string, item AssistantItem) {
@@ -24,24 +20,6 @@ func readInMessage(message LarkMessage) UserItem {
 	}
 }
 
-func readUserMessage(reader *bufio.Reader) (UserItem, error) {
-	userMsg, err := reader.ReadString('\n')
-	eof := errors.Is(err, io.EOF)
-
-	if err != nil && !eof {
-		return UserItem{}, err
-	}
-
-	if eof && len(userMsg) == 0 {
-		return UserItem{}, errors.New("stdin is end")
-	}
-
-	userMsg = strings.TrimSuffix(userMsg, "\n")
-	userMsg = strings.TrimSuffix(userMsg, "\r")
-
-	return UserItem{Content: userMsg}, nil
-}
-
 func runLark() {
 	conf, err := loadConfig("conf/config.local.json")
 	if err != nil {
@@ -55,8 +33,7 @@ func runLark() {
 		return
 	}
 
-	state := Context{}
-	state.Init(conf.LLMProviderConfig.Model)
+	state := NewContext(conf.LLMProviderConfig.Model)
 	loop := NewLoop(&state, provider, conf.AgentRunConfig.TokenBudget)
 
 	connectorErr := make(chan error, 1)

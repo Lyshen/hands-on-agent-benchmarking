@@ -13,31 +13,30 @@ type Context struct {
 	TokenUsage TokenUsage
 }
 
-func (c *Context) Init(model string) {
-	c.Model = model
-
-	c.Transcript = []TranscriptItem{
-		SystemPromptItem{
-			Content: "You are Mary. You are a lovely girl.",
+func NewContext(model string) Context {
+	return Context{
+		Model: model,
+		Transcript: []TranscriptItem{
+			SystemPromptItem{
+				Content: "You are Mary. You are a lovely girl.",
+			},
 		},
-	}
-
-	c.Tools = []Tool{
-		{
-			Name:        "shell",
-			Description: "Run an allowed read-only command in the journal workspace.",
-			Parameters: []ToolParameter{
-				{
-					Name:        "command",
-					Description: "The command to run.",
-					Type:        ParameterString,
-					Required:    true,
+		Tools: []Tool{
+			{
+				Name:        "shell",
+				Description: "Run an allowed read-only command in the journal workspace.",
+				Parameters: []ToolParameter{
+					{
+						Name:        "command",
+						Description: "The command to run.",
+						Type:        ParameterString,
+						Required:    true,
+					},
 				},
 			},
 		},
+		TokenUsage: TokenUsage{},
 	}
-
-	c.TokenUsage = TokenUsage{}
 }
 
 func (c *Context) Add(item TranscriptItem) {
