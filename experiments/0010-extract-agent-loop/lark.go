@@ -34,7 +34,11 @@ func runLark() {
 	}
 
 	state := NewContext(conf.LLMProviderConfig.Model)
-	runner := NewRunner(NewLoop(&state, provider, conf.AgentRunConfig.TokenBudget))
+	runner := NewRunner(LoopConfig{
+		State:       &state,
+		Provider:    provider,
+		TokenBudget: conf.AgentRunConfig.TokenBudget,
+	})
 
 	connectorErr := make(chan error, 1)
 	connector := NewLarkConnector(conf.LarkConnectorConfig)
@@ -56,8 +60,7 @@ func runLark() {
 			fmt.Println()
 
 			userItem := readInMessage(inMessage)
-			state.Add(userItem)
-			assistantItem, err := runner.Run()
+			assistantItem, err := runner.Run(userItem)
 
 			if err != nil {
 				fmt.Println(err)

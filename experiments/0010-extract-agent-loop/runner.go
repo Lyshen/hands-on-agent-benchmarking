@@ -11,6 +11,12 @@ type Loop struct {
 	tokenBudget *int
 }
 
+type LoopConfig struct {
+	State       *Context
+	Provider    Provider
+	TokenBudget *int
+}
+
 func NewLoop(state *Context, provider Provider, tokenBudget *int) Loop {
 	return Loop{
 		state:       state,
@@ -19,7 +25,9 @@ func NewLoop(state *Context, provider Provider, tokenBudget *int) Loop {
 	}
 }
 
-func (loop Loop) runTurn() (AssistantItem, error) {
+func (loop Loop) runTurn(input UserItem) (AssistantItem, error) {
+	loop.state.Add(input)
+
 	for {
 		if loop.tokenBudget != nil && loop.state.TokenUsage.TotalToken > *loop.tokenBudget {
 			return AssistantItem{}, errors.New("current loop is out of token budget")
@@ -59,12 +67,16 @@ type Runner struct {
 	mainLoop Loop
 }
 
-func NewRunner(loop Loop) Runner {
+func NewRunner(conf LoopConfig) Runner {
 	return Runner{
-		mainLoop: loop,
+		mainLoop: NewLoop(
+			conf.State,
+			conf.Provider,
+			conf.TokenBudget,
+		),
 	}
 }
 
-func (r Runner) Run() (AssistantItem, error) {
-	return r.mainLoop.runTurn()
+func (r Runner) Run(input UserItem) (AssistantItem, error) {
+	return r.mainLoop.runTurn(input)
 }
