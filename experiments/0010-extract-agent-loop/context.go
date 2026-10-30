@@ -18,7 +18,7 @@ func NewContext(model string) Context {
 		Tools: []Tool{
 			{
 				Name:        "shell",
-				Description: "Run an allowed read-only command in the journal workspace.",
+				Description: "Execute a shell command with the process's permissions. Commands may read or modify files and have side effects.",
 				Parameters: []ToolParameter{
 					{
 						Name:        "command",
