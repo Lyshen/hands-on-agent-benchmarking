@@ -6,18 +6,18 @@ import (
 )
 
 type Loop struct {
-	state       *Context
+	state       Context
 	provider    Provider
 	tokenBudget *int
 }
 
 type LoopConfig struct {
-	State       *Context
+	State       Context
 	Provider    Provider
 	TokenBudget *int
 }
 
-func NewLoop(state *Context, provider Provider, tokenBudget *int) Loop {
+func NewLoop(state Context, provider Provider, tokenBudget *int) Loop {
 	return Loop{
 		state:       state,
 		provider:    provider,

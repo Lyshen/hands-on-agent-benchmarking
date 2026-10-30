@@ -5,7 +5,7 @@ import (
 )
 
 type Provider interface {
-	Generate(state *Context) (ProviderResponse, error)
+	Generate(state Context) (ProviderResponse, error)
 }
 
 func NewProvider(conf *LLMProviderConfig) (Provider, error) {

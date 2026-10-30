@@ -14,8 +14,8 @@ type OpenAIProvider struct {
 	Adapter OpenAIAdapter
 }
 
-func (provider OpenAIProvider) Generate(state *Context) (ProviderResponse, error) {
-	req, err := provider.Adapter.buildRequest(*state)
+func (provider OpenAIProvider) Generate(state Context) (ProviderResponse, error) {
+	req, err := provider.Adapter.buildRequest(state)
 	if err != nil {
 		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
 	}

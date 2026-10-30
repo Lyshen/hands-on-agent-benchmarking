@@ -14,8 +14,8 @@ type OllamaProvider struct {
 	Adapter OllamaAdapter
 }
 
-func (provider OllamaProvider) Generate(state *Context) (ProviderResponse, error) {
-	req, err := provider.Adapter.buildRequest(*state)
+func (provider OllamaProvider) Generate(state Context) (ProviderResponse, error) {
+	req, err := provider.Adapter.buildRequest(state)
 	if err != nil {
 		return ProviderResponse{Item: AssistantItem{}, Usage: TokenUsage{}}, err
 	}

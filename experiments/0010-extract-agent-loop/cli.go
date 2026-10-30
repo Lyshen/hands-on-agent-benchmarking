@@ -19,7 +19,7 @@ func runCli(task string) {
 
 	state := NewContext(conf.LLMProviderConfig.Model)
 	runner := NewRunner(LoopConfig{
-		State:       &state,
+		State:       state,
 		Provider:    provider,
 		TokenBudget: conf.AgentRunConfig.TokenBudget,
 	})
