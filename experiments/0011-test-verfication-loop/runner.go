@@ -57,6 +57,7 @@ func (loop *Loop) runTurn(input UserItem) (AssistantItem, error) {
 }
 
 type Runner struct {
+	maxReviews       int
 	mainLoop         Loop
 	verificationLoop Loop
 }
@@ -77,12 +78,11 @@ func NewRunner(model string, provider Provider, conf AgentRunConfig) Runner {
 	)
 
 	return Runner{
+		maxReviews:       conf.MaxReviews,
 		mainLoop:         mainLoop,
 		verificationLoop: verificationLoop,
 	}
 }
-
-const MaxReviews = 1
 
 func (r *Runner) Run(input UserItem) (AssistantItem, error) {
 	result, err := r.mainLoop.runTurn(input)
@@ -90,7 +90,7 @@ func (r *Runner) Run(input UserItem) (AssistantItem, error) {
 		return AssistantItem{}, err
 	}
 
-	for i := 0; i < MaxReviews; i++ {
+	for i := 0; i < r.maxReviews; i++ {
 		reviewInput := UserItem{
 			Content: fmt.Sprintf(
 				"Original task:\n%s\n\nMain agent summary:\n%s\n\n"+
@@ -111,10 +111,10 @@ func (r *Runner) Run(input UserItem) (AssistantItem, error) {
 			return result, nil
 		}
 
-		if i == MaxReviews-1 {
+		if i == r.maxReviews-1 {
 			return result, fmt.Errorf(
 				"verification did not pass after %d reviews: %s",
-				MaxReviews,
+				r.maxReviews,
 				review.Content,
 			)
 		}
