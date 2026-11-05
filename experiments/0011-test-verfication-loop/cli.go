@@ -17,13 +17,7 @@ func runCli(task string) {
 		return
 	}
 
-	state := NewContext(conf.LLMProviderConfig.Model, conf.LLMProviderConfig.SystemPrompt)
-	runner := NewRunner(LoopConfig{
-		State:       state,
-		Provider:    provider,
-		TokenBudget: conf.AgentRunConfig.TokenBudget,
-	})
-
+	runner := NewRunner(conf.LLMProviderConfig.Model, provider, conf.AgentRunConfig)
 	assistantItem, err := runner.Run(UserItem{Content: task})
 
 	if err != nil {

@@ -13,8 +13,17 @@ type Config struct {
 	AgentRunConfig      AgentRunConfig      `json:"agent_run_config"`
 }
 
+type LoopConfig struct {
+	SystemPrompt    string `json:"system_prompt"`
+	TokenBudget     *int   `json:"token_budget"`
+	MaxStepsPerTurn *int   `json:"max_steps_per_turn"`
+}
+
 type AgentRunConfig struct {
-	TokenBudget *int `json:"token_budget"`
+	MainLoop         LoopConfig `json:"main_loop"`
+	VerificationLoop LoopConfig `json:"verification_loop"`
+
+	MaxReviews int `json:"max_reviews"`
 }
 
 type LarkConnectorConfig struct {
@@ -27,7 +36,6 @@ type LLMProviderConfig struct {
 	APIKey   string `json:"apikey"`
 	Model    string `json:"model"`
 	Protocol string `json:"protocol"`
-	SystemPrompt string `json:"system_prompt"`
 }
 
 func loadConfig(filename string) (Config, error) {
@@ -80,10 +88,12 @@ func loadConfigFromEnv() (Config, error) {
 			APIKey:   api_key,
 			Model:    model,
 			Protocol: "openai",
-			SystemPrompt: systemPrompt,
 		},
 		AgentRunConfig: AgentRunConfig{
-			TokenBudget: tokenBudget,
+			MainLoop: LoopConfig{
+				SystemPrompt: systemPrompt,
+				TokenBudget:  tokenBudget,
+			},
 		},
 	}
 

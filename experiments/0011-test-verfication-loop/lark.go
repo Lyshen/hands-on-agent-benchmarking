@@ -18,12 +18,7 @@ func runLark() {
 		return
 	}
 
-	state := NewContext(conf.LLMProviderConfig.Model, conf.LLMProviderConfig.SystemPrompt)
-	runner := NewRunner(LoopConfig{
-		State:       state,
-		Provider:    provider,
-		TokenBudget: conf.AgentRunConfig.TokenBudget,
-	})
+	runner := NewRunner(conf.LLMProviderConfig.Model, provider, conf.AgentRunConfig)
 
 	connectorErr := make(chan error, 1)
 	connector := NewLarkConnector(conf.LarkConnectorConfig)

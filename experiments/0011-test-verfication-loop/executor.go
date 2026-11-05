@@ -27,16 +27,19 @@ func execute(toolInvocation ToolInvocation) ToolResult {
 	}
 
 	cmd := exec.Command("bash", "-o", "pipefail", "-c", shellCommand.Command)
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 
-	var exitErr *exec.ExitError
-	if err == nil {
-		result.Output = string(output)
-	} else if errors.As(err, &exitErr) {
-		result.Error = errors.New("Command err " + string(exitErr.Stderr))
-	} else {
-		result.Error = err
-	}
+	result.Output = string(output)
+	result.Error = err
+	/*
+		var exitErr *exec.ExitError
+		if err == nil {
+			result.Output = string(output)
+		} else if errors.As(err, &exitErr) {
+			result.Error = errors.New("Command err " + string(exitErr.Stderr))
+		} else {
+			result.Error = err
+		}*/
 
 	return result
 }
