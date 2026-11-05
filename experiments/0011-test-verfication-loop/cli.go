@@ -5,7 +5,7 @@ import (
 )
 
 func runCli(task string) {
-	conf, err := loadConfigFromEnv()
+	conf, err := loadConfig("conf/config.local.json")
 	if err != nil {
 		fmt.Println("fail to load config: ", err)
 		return
