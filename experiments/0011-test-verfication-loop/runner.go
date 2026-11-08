@@ -56,6 +56,12 @@ func (loop *Loop) runTurn(input UserItem) (AssistantItem, error) {
 				)
 				loop.state.Add(ToolResultItem{Result: toolResult})
 			}
+
+		default:
+			return AssistantItem{}, fmt.Errorf(
+				"unsupported provider response type: %T",
+				resp.Item,
+			)
 		}
 	}
 }
