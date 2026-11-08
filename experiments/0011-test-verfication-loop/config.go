@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -47,6 +48,18 @@ func loadConfig(filename string) (Config, error) {
 	err = json.Unmarshal(data, &conf)
 	if err != nil {
 		return Config{}, err
+	}
+
+	if conf.AgentRunConfig.MaxReviews < 0 {
+		return conf, fmt.Errorf("maxreviews of agent run conf is negative :%d", conf.AgentRunConfig.MaxReviews)
+	}
+
+	if conf.AgentRunConfig.MainLoop.ShellTimeoutSeconds <= 0 {
+		return conf, fmt.Errorf("ShellTimeoutSeconds of MainLoop needs to be positive :%d", conf.AgentRunConfig.MainLoop.ShellTimeoutSeconds)
+	}
+
+	if conf.AgentRunConfig.VerificationLoop.ShellTimeoutSeconds <= 0 {
+		return conf, fmt.Errorf("ShellTimeoutSeconds of VerificationLoop needs to be positive :%d", conf.AgentRunConfig.VerificationLoop.ShellTimeoutSeconds)
 	}
 
 	return conf, nil
