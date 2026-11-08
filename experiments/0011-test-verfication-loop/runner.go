@@ -19,7 +19,11 @@ func NewLoop(state Context, provider Provider, conf LoopConfig) Loop {
 func (loop *Loop) runTurn(input UserItem) (AssistantItem, error) {
 	loop.state.Add(input)
 
-	for {
+	for step := 0; ; step++ {
+		if loop.conf.MaxStepsPerTurn != nil && step >= *loop.conf.MaxStepsPerTurn {
+			return AssistantItem{}, fmt.Errorf("max steps per turn exceeded: %d", *loop.conf.MaxStepsPerTurn)
+		}
+
 		if loop.conf.TokenBudget != nil && loop.state.TokenUsage.TotalToken > *loop.conf.TokenBudget {
 			return AssistantItem{}, errors.New("current loop is out of token budget")
 		}
