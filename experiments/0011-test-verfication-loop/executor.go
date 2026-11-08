@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os/exec"
+	"time"
 )
 
-func execute(toolInvocation ToolInvocation) ToolResult {
+func execute(toolInvocation ToolInvocation, timeout int) ToolResult {
 	result := ToolResult{
 		Invocation: toolInvocation,
 		Output:     "",
@@ -26,20 +28,14 @@ func execute(toolInvocation ToolInvocation) ToolResult {
 		return result
 	}
 
-	cmd := exec.Command("bash", "-o", "pipefail", "-c", shellCommand.Command)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "bash", "-o", "pipefail", "-c", shellCommand.Command)
 	output, err := cmd.CombinedOutput()
 
 	result.Output = string(output)
 	result.Error = err
-	/*
-		var exitErr *exec.ExitError
-		if err == nil {
-			result.Output = string(output)
-		} else if errors.As(err, &exitErr) {
-			result.Error = errors.New("Command err " + string(exitErr.Stderr))
-		} else {
-			result.Error = err
-		}*/
 
 	return result
 }

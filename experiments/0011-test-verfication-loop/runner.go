@@ -48,7 +48,7 @@ func (loop *Loop) runTurn(input UserItem) (AssistantItem, error) {
 					toolInvocation.Name,
 					toolInvocation.Arguments,
 				)
-				toolResult := execute(toolInvocation)
+				toolResult := execute(toolInvocation, loop.conf.ShellTimeoutSeconds)
 				fmt.Printf(
 					"ToolResult: output=%q error=%v\n",
 					toolResult.Output,

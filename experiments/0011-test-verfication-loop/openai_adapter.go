@@ -149,7 +149,7 @@ func (adapter OpenAIAdapter) buildToolCallMessage(item ToolCallsItem) OpenAIMess
 func (adapter OpenAIAdapter) buildToolResultMessage(item ToolResultItem) OpenAIMessage {
 	content := item.Result.Output
 	if item.Result.Error != nil {
-		content = item.Result.Error.Error()
+		content += "\nToolResult error:" + item.Result.Error.Error()
 	}
 
 	message := OpenAIMessage{

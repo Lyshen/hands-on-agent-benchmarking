@@ -12,9 +12,10 @@ type Config struct {
 }
 
 type LoopConfig struct {
-	SystemPrompt    string `json:"system_prompt"`
-	TokenBudget     *int   `json:"token_budget"`
-	MaxStepsPerTurn *int   `json:"max_steps_per_turn"`
+	SystemPrompt        string `json:"system_prompt"`
+	TokenBudget         *int   `json:"token_budget"`
+	MaxStepsPerTurn     *int   `json:"max_steps_per_turn"`
+	ShellTimeoutSeconds int    `json:"shell_timeout_seconds"`
 }
 
 type AgentRunConfig struct {
