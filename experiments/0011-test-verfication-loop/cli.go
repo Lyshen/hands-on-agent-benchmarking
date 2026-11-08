@@ -4,8 +4,8 @@ import (
 	"fmt"
 )
 
-func runCli(task string) {
-	conf, err := loadConfig("conf/config.local.json")
+func runCli(task string, configDir string) {
+	conf, err := loadConfig(configDir)
 	if err != nil {
 		fmt.Println("fail to load config: ", err)
 		return

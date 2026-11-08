@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-func runLark() {
-	conf, err := loadConfig("conf/config.local.json")
+func runLark(configDir string) {
+	conf, err := loadConfig(configDir)
 	if err != nil {
 		fmt.Println("fail to load config: ", err)
 		return
