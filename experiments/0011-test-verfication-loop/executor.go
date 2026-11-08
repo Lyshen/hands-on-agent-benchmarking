@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os/exec"
 	"time"
 )
@@ -35,7 +36,11 @@ func execute(toolInvocation ToolInvocation, timeout int) ToolResult {
 	output, err := cmd.CombinedOutput()
 
 	result.Output = string(output)
-	result.Error = err
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) && err != nil {
+		result.Error = fmt.Errorf("shell command timeout after %d seconds:%w", timeout, ctx.Err())
+	} else {
+		result.Error = err
+	}
 
 	return result
 }
